@@ -18,7 +18,7 @@
 #ifndef INCLUDED_WWD_BUS_INTERFACE_H_
 #define INCLUDED_WWD_BUS_INTERFACE_H_
 
-#include "wiced_utilities.h"  /* for wiced_result_t */
+#include "wwd_constants.h"  /* for wiced_result_t */
 #include "Network/wwd_buffer_interface.h"
 
 #ifdef __cplusplus

@@ -20,7 +20,6 @@
 #define INCLUDED_WWD_SPI_INTERFACE_H_
 
 #include <stdint.h>
-#include "wiced_utilities.h"
 
 #ifdef __cplusplus
 extern "C"

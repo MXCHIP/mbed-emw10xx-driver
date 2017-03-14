@@ -15,7 +15,8 @@
 #ifndef INCLUDED_WWD_AP_H_
 #define INCLUDED_WWD_AP_H_
 
-#include "wiced_utilities.h"
+//#include "wiced_utilities.h"
+#include "wwd_constants.h"
 
 extern wiced_bool_t wiced_wifi_ap_is_up;
 

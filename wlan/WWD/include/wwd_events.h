@@ -18,7 +18,7 @@
 #ifndef INCLUDED_WWD_EVENTS_H
 #define INCLUDED_WWD_EVENTS_H
 
-#include "wiced_utilities.h"
+//#include "wiced_utilities.h"
 #include "wwd_wifi.h"
 
 #ifdef __cplusplus

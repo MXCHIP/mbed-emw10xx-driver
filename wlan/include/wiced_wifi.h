@@ -14,9 +14,9 @@
 
 #pragma once
 
-#include "wiced_utilities.h"
+//#include "wiced_utilities.h"
 #include "wwd_wifi.h"
-#include "wiced_rtos.h"
+//#include "wiced_rtos.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -17,13 +17,13 @@
 #include "Platform/wwd_platform_interface.h"
 #include "Network/wwd_buffer_interface.h"
 #include "string.h"
-#include "wiced_utilities.h"
+//#include "wiced_utilities.h"
 
-#include "wiced_rtos.h"
+#include "mico_rtos.h"
 
-#ifndef OTA_UPGRADE
-#include "wifi_nvram_image.h"
-#endif /* ifndef OTA_UPGRADE */
+//#ifndef OTA_UPGRADE
+//#include "wifi_nvram_image.h"
+//#endif /* ifndef OTA_UPGRADE */
 
 static uint32_t chip_ram_size = CHIP_RAM_SIZE;
 uint8_t* host_platform_read_wifi_nvram_image(int offset);
@@ -154,7 +154,7 @@ wiced_result_t wiced_write_wifi_firmware_image( void )
 
     /* Transfer firmware image into the RAM */
     transfer_progress = 0;
-    segment_size = host_platform_read_wifi_firmware( transfer_progress, &buffer );
+    segment_size = host_platform_read_memory_wifi_firmware( transfer_progress, &buffer );
     if ( buffer != NULL )
     {
         packet = (uint8_t*) host_buffer_get_current_piece_data_pointer( buffer );
@@ -186,7 +186,7 @@ wiced_result_t wiced_write_wifi_firmware_image( void )
             host_buffer_release( buffer, WICED_NETWORK_TX );
 #endif
             buffer       = NULL;
-            segment_size = host_platform_read_wifi_firmware( transfer_progress, &buffer );
+            segment_size = host_platform_read_memory_wifi_firmware( transfer_progress, &buffer );
             if ( buffer != NULL )
             {
                 packet = (uint8_t*) host_buffer_get_current_piece_data_pointer( buffer );
@@ -222,11 +222,11 @@ wiced_result_t wiced_write_wifi_nvram_image( void )
     uint32_t temp_dword;
 
     /* Get the size of the variable image and round it up to the next 64 bytes boundary */
-    image_size = ROUND_UP(host_platform_wifi_nvram_size(), (uint32_t)MAX_TRANSFER_SIZE);
+    image_size = ROUND_UP(host_platform_memory_wifi_nvram_size(), (uint32_t)MAX_TRANSFER_SIZE);
 
     /* Transfer the variable image into the end of the RAM */
     device_ram_address = chip_ram_size - 4 - image_size;
-    for ( transfer_progress = 0, segment_size = host_platform_read_wifi_nvram( transfer_progress, &buffer ); segment_size != 0; host_buffer_release( buffer, WICED_NETWORK_TX ), segment_size = host_platform_read_wifi_nvram( transfer_progress, &buffer ) )
+    for ( transfer_progress = 0, segment_size = host_platform_read_memory_wifi_nvram( transfer_progress, &buffer ); segment_size != 0; host_buffer_release( buffer, WICED_NETWORK_TX ), segment_size = host_platform_read_memory_wifi_nvram( transfer_progress, &buffer ) )
     {
         data = host_buffer_get_current_piece_data_pointer( buffer );
         for ( ; segment_size != 0; segment_size -= transfer_size, data += transfer_size, transfer_progress += transfer_size, device_ram_address += transfer_size )
@@ -324,14 +324,14 @@ uint32_t host_platform_read_memory_wifi_nvram( uint32_t offset, /*@out@*/wiced_b
     return buffer_size;
 }
 
-WEAK uint32_t host_platform_memory_wifi_nvram_size( void )
-{
-    return sizeof( wifi_nvram_image );
-}
-
-WEAK uint8_t* host_platform_read_wifi_nvram_image(int offset)
-{
-    return (uint8_t*)&wifi_nvram_image[offset];
-}
+//WEAK uint32_t host_platform_memory_wifi_nvram_size( void )
+//{
+//    return sizeof( wifi_nvram_image );
+//}
+//
+//WEAK uint8_t* host_platform_read_wifi_nvram_image(int offset)
+//{
+//    return (uint8_t*)&wifi_nvram_image[offset];
+//}
 
 #endif /* ifndef OTA_UPGRADE */

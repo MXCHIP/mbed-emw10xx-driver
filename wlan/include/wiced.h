@@ -14,17 +14,17 @@
 
 #pragma once
 
-#include "wiced_utilities.h"
+//#include "wiced_utilities.h"
 //#include "wiced_dct.h"
 //#include "wiced_platform.h"
-#include "wiced_rtos.h"
+//#include "wiced_rtos.h"
 #include "wiced_tcpip.h"
-#include "wiced_time.h"
+//#include "wiced_time.h"
 #include "wiced_wifi.h"
 #include "wiced_defaults.h"
 #include "wiced_network.h"
 #include "wiced_management.h"
-#include "wiced_easy_setup.h"
+//#include "wiced_easy_setup.h"
 #include "wwd_debug.h"
 #include "wwd_assert.h"
 

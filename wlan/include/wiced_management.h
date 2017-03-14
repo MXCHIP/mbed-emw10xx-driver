@@ -16,7 +16,7 @@
 
 #include "wiced_network.h"
 #include "wwd_network_interface.h"
-#include "wiced_rtos.h"
+//#include "wiced_rtos.h"
 #include "wiced_tcpip.h"
 
 #ifdef __cplusplus

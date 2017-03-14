@@ -556,6 +556,34 @@ typedef int         OSStatus;
     #define htonl( X )      hton32( X )
     #define ntohl( X )      ntoh32( X )
 #endif
+
+static inline uint16_t htobe16(uint16_t v)
+{
+    return (uint16_t)(((v&0x00FF) << 8) | ((v&0xFF00)>>8));
+}
+
+static inline uint32_t htobe32(uint32_t v)
+{
+    return (uint32_t)(((v&0x000000FF) << 24) | ((v&0x0000FF00) << 8) | ((v&0x00FF0000) >> 8) | ((v&0xFF000000) >> 24));
+}
+
+#define MICO_VERIFY(x)                               {OSStatus res = (x); if (res != kNoErr){return res;}}
+
+#define MEMCAT(destination, source, source_length)    (void*)((uint8_t*)memcpy((destination),(source),(source_length)) + (source_length))
+
+
+#define MALLOC_OBJECT(name,object_type)               ((object_type*)malloc_named(name,sizeof(object_type)))
+
+#define ROUND_UP(x,y)    ((x) % (y) ? (x) + (y)-((x)%(y)) : (x))
+
+#ifndef MIN
+#define MIN(x,y)  ((x) < (y) ? (x) : (y))
+#endif /* ifndef MIN */
+
+#ifndef MAX
+#define MAX(x,y)  ((x) > (y) ? (x) : (y))
+#endif /* ifndef MAX */
+
 //---------------------------------------------------------------------------------------------------------------------------
 /*! @function   BitArray
     @abstract   Macros for working with bit arrays.

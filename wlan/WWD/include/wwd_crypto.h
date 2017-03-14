@@ -18,7 +18,7 @@
 #define INCLUDED_WWD_CRYPTO_H
 
 #include <stdint.h>
-#include "wiced_utilities.h"
+//#include "wiced_utilities.h"
 
 #ifdef __cplusplus
 extern "C"

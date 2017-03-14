@@ -13,6 +13,7 @@
  */
 
 #include <stdlib.h>
+#include "mico_common.h"
 #include "wiced_wifi.h"
 #include "wwd_debug.h"
 #include "wwd_assert.h"
@@ -21,7 +22,7 @@
 //#include "platform_dct.h"
 #include "string.h"
 #include "wwd_wifi.h"
-#include "wiced_utilities.h"
+//#include "wiced_utilities.h"
 #include "internal/wiced_internal_api.h"
 #include "wwd_management.h"
 #include "wiced_management.h"

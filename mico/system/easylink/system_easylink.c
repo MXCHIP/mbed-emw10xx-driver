@@ -20,7 +20,6 @@
 #include "mico.h"
 #include "system_internal.h"
 #include "StringUtils.h"
-#include "SocketUtils.h"
 
 #include "system.h"
 
@@ -521,7 +520,7 @@ void airkiss_broadcast_thread( uint32_t arg )
     if ( err != kNoErr ){
         system_log( "thread exit with err: %d", err );
     }
-    SocketClose( &fd );
+    close( fd );
     mico_rtos_delete_thread( NULL );
 }
 #endif

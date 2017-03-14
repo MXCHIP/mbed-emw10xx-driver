@@ -14,7 +14,10 @@
 
 #pragma once
 
-#include "wiced_utilities.h"
+//#include "wiced_utilities.h"
+#include "wwd_constants.h"
+#include "wwd_structures.h"
+
 #include "wwd_network_interface.h"
 #include "wiced_network.h"
 #include <limits.h>
