@@ -1,20 +1,17 @@
-/**
- ******************************************************************************
- * @file    mico_rtos_common.c
- * @author  William Xu
- * @version V1.0.0
- * @date    22-Aug-2016
- * @brief   Definitions of the MiCO Common RTOS abstraction layer functions
- ******************************************************************************
+/* MiCO Team
+ * Copyright (c) 2017 MXCHIP Information Tech. Co.,Ltd
  *
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- ******************************************************************************
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 /** @file

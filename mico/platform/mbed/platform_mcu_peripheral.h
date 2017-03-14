@@ -1,36 +1,25 @@
-/**
- ******************************************************************************
- * @file    platform_mcu_peripheral.h
- * @author  William Xu
- * @version V1.0.0
- * @date    05-May-2014
- * @brief   This file provide all the headers of functions for stm32f2xx platform
- ******************************************************************************
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
+/* MiCO Team
+ * Copyright (c) 2017 MXCHIP Information Tech. Co.,Ltd
  *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
- ******************************************************************************
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
-#pragma once
+#ifndef __PLATFORM_MCU_PERIPHERAL_H__
+#define __PLATFORM_MCU_PERIPHERAL_H__
 
 
 #include "stm32f4xx.h"
-//#include "stm32f4xx_hal.h"
-// #include "stm32f4xx_dma.h"
-// #include "stm32f4xx_adc.h"
-// #include "stm32f4xx_rcc.h"
-// #include "stm32f4xx_gpio.h"
-// #include "stm32f4xx_tim.h"
-// #include "stm32f4xx_rtc.h"
-// #include "stm32f4xx_pwr.h"
-// #include "stm32f4xx_rng.h"
-
 #include "mico_rtos.h"
-// #include "RingBufferUtils.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -110,25 +99,6 @@ typedef struct
 } platform_dma_config_t;
 
 
-
-// typedef struct
-// {
-//     ADC_TypeDef*           port;
-//     uint8_t                channel;
-//     uint32_t               adc_peripheral_clock;
-//     uint8_t                rank;
-//     const platform_gpio_t* pin;
-// } platform_adc_t;
-
-// typedef struct
-// {
-//     TIM_TypeDef*           tim;
-//     uint8_t                channel;
-//     uint32_t               tim_peripheral_clock;
-//     uint8_t                gpio_af;
-//     const platform_gpio_t* pin;
-// } platform_pwm_t;
-
 #if defined(STM32F412Rx) || defined(STM32F412Vx) || defined(STM32F412Zx) || defined(STM32F469xx) || defined(STM32F479xx)
 typedef struct
 {
@@ -150,82 +120,6 @@ typedef struct
 }platform_qspi_t;
 #endif
 
-// /* DMA can be enabled by setting SPI_USE_DMA */
-// typedef struct
-// {
-//     platform_spi_port_t*                 port;
-//     uint8_t                              gpio_af;
-//     uint32_t                             peripheral_clock_reg;
-//     platform_peripheral_clock_function_t peripheral_clock_func;
-//     const platform_gpio_t*               pin_mosi;
-//     const platform_gpio_t*               pin_miso;
-//     const platform_gpio_t*               pin_clock;
-//     platform_dma_config_t                tx_dma;
-//     platform_dma_config_t                rx_dma;
-// } platform_spi_t;
-
-// typedef struct
-// {
-//     platform_spi_t*           peripheral;
-//     mico_mutex_t              spi_mutex;
-// } platform_spi_driver_t;
-
-// typedef struct
-// {
-//     uint8_t unimplemented;
-// } platform_spi_slave_driver_t;
-
-// typedef struct
-// {
-//     platform_i2c_port_t*   port;
-//     const platform_gpio_t* pin_scl;
-//     const platform_gpio_t* pin_sda;
-//     uint32_t               peripheral_clock_reg;
-//     dma_registers_t*       tx_dma;
-//     peripheral_clock_t     tx_dma_peripheral_clock;
-//     DMA_Stream_TypeDef*    tx_dma_stream;
-//     DMA_Stream_TypeDef*    rx_dma_stream;
-//     int                    tx_dma_stream_id;
-//     int                    rx_dma_stream_id;
-//     uint32_t               tx_dma_channel;
-//     uint32_t               rx_dma_channel;
-//     uint8_t                gpio_af_scl;
-//     uint8_t                gpio_af_sda;
-// } platform_i2c_t;
-
-// typedef struct
-// {
-//     mico_mutex_t              i2c_mutex;
-// } platform_i2c_driver_t;
-
-// typedef void (* wakeup_irq_handler_t)(void *arg);
-
-// typedef struct
-// {
-//     platform_uart_port_t*  port;
-//     const platform_gpio_t* pin_tx;
-//     const platform_gpio_t* pin_rx;
-//     const platform_gpio_t* pin_cts;
-//     const platform_gpio_t* pin_rts;
-//     platform_dma_config_t  tx_dma_config;
-//     platform_dma_config_t  rx_dma_config;
-// } platform_uart_t;
-
-// typedef struct
-// {
-//     platform_uart_t*           peripheral;
-//     ring_buffer_t*             rx_buffer;
-//     mico_semaphore_t           rx_complete;
-//     mico_semaphore_t           tx_complete;
-//     mico_mutex_t               tx_mutex;
-//     mico_semaphore_t           sem_wakeup;
-//     volatile uint32_t          tx_size;
-//     volatile uint32_t          rx_size;
-//     volatile OSStatus          last_receive_result;
-//     volatile OSStatus          last_transmit_result;
-//     volatile bool              initialized;
-// } platform_uart_driver_t;
-
 
 typedef struct
 {
@@ -242,30 +136,13 @@ typedef struct
 /******************************************************
  *               Function Declarations
  ******************************************************/
-// OSStatus platform_gpio_irq_manager_init      ( void );
-// uint8_t  platform_gpio_get_port_number       ( platform_gpio_port_t* gpio_port );
-// OSStatus platform_gpio_enable_clock          ( const platform_gpio_t* gpio );
-// OSStatus platform_gpio_set_alternate_function( platform_gpio_port_t* gpio_port, uint8_t pin_number, GPIOOType_TypeDef output_type, GPIOPuPd_TypeDef pull_up_down_type, uint8_t alternation_function );
 
-// OSStatus platform_mcu_powersave_init         ( void );
-
-// OSStatus platform_rtc_init                   ( void );
-// OSStatus platform_rtc_enter_powersave        ( void );
-// OSStatus platform_rtc_abort_powersave        ( void );
-// OSStatus platform_rtc_exit_powersave         ( uint32_t requested_sleep_time, uint32_t *cpu_sleep_time );
-
-// uint8_t  platform_uart_get_port_number       ( platform_uart_port_t* uart );
-// void     platform_uart_irq                   ( platform_uart_driver_t* driver );
-// void     platform_uart_tx_dma_irq            ( platform_uart_driver_t* driver );
-// void     platform_uart_rx_dma_irq            ( platform_uart_driver_t* driver );
-
-// uint8_t  platform_spi_get_port_number        ( platform_spi_port_t* spi );
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-
+#endif
 
 
 
