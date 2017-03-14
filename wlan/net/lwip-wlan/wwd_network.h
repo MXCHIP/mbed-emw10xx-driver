@@ -12,6 +12,7 @@
 #define INCLUDED_WICED_NETWORK_H_
 
 #include "lwip/err.h"
+#include "Network/wwd_network_constants.h"
 
 #ifdef __cplusplus
 extern "C"

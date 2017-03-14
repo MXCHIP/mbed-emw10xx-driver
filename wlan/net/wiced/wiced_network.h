@@ -21,6 +21,7 @@
 #include "lwip/sockets.h"
 
 #include "wwd_constants.h"
+#include "Network/wwd_network_constants.h"
 
 #ifdef __cplusplus
 extern "C"

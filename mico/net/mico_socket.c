@@ -1,20 +1,19 @@
-/**
- ******************************************************************************
- * @file    mico_socket.c
- * @author  William Xu
- * @version V1.0.0
- * @date    05-Aug-2018
- * @brief   This file provide the MiCO Socket abstract layer convert functions.
- ******************************************************************************
+/* MiCO Team
+ * Copyright (c) 2017 MXCHIP Information Tech. Co.,Ltd
  *
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
- ******************************************************************************
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 
 
 #include <string.h>
@@ -29,14 +28,6 @@
  *                      Macros
  ******************************************************/
 
-//#ifdef inet_addr
-//#undef inet_addr
-//#endif
-//
-//
-//#ifdef inet_ntoa
-//#undef inet_ntoa
-//#endif
 
 /******************************************************
  *                    Constants
@@ -53,17 +44,6 @@
 /******************************************************
  *                    Structures
  ******************************************************/
-//struct pollfd {
-//	int fd; /**< fd related to */
-//	short events; /**< which POLL... events to respond to */
-//	short revents; /**< which POLL... events occurred */
-//};
-#define POLLIN		0x0001
-#define POLLPRI		0x0002
-#define POLLOUT		0x0004
-#define POLLERR		0x0008
-#define POLLHUP		0x0010
-#define POLLNVAL	0x0020
 
 /******************************************************
  *               Function Declarations
@@ -121,63 +101,8 @@ int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struc
 
     return lwip_select( nfds, readfds, writefds, exceptfds, timeout );
 }
-#if 0
-int poll(struct pollfd *fds, int nfds, int timeout)
-{
-	int maxfd=0;
-	int i, n;
-	fd_set rfds, wfds, efds;
-	struct timeval t;
-	int ret = 0, got;
 
-	//printf("poll nfds=%d, timeout = %d\r\n", nfds, timeout);
-	FD_ZERO(&rfds);
-	FD_ZERO(&wfds);
-	FD_ZERO(&efds);
-	for(i=0; i<nfds; i++) {
-		if (fds[i].fd > maxfd)
-			maxfd = fds[i].fd;
-		if (fds[i].events & (POLLIN|POLLPRI))
-			FD_SET(fds[i].fd, &rfds); 
-		if (fds[i].events & (POLLOUT))
-			FD_SET(fds[i].fd, &wfds); 
-		if (fds[i].events & (POLLERR|POLLHUP|POLLNVAL))
-			FD_SET(fds[i].fd, &efds); 
-		fds[i].revents = 0;
-		//printf("<%d> fd=%d, evetns = %x\r\n", i, fds[i].fd, fds[i].events);
-	}
-	if (timeout < 0) {
-		n = lwip_select(maxfd+1, &rfds, &wfds, &efds, NULL);
-	} else {
-		t.tv_sec = timeout / 1000;
-		t.tv_usec = (timeout % 1000) * 1000;
-		n = lwip_select(maxfd+1, &rfds, &wfds, &efds, &t);
-	}
-	if (n <= 0)
-		return n;
-	for(i=0; i<nfds; i++) {
-		got=0;
-		if (FD_ISSET(fds[i].fd, &rfds)) {
-			fds[i].revents = fds[i].events & (POLLIN|POLLPRI);
-			got = 1;
-		}
-		if (FD_ISSET(fds[i].fd, &wfds)) {
-			fds[i].revents = fds[i].events & POLLOUT;
-			got = 1;
-		}
-		if (FD_ISSET(fds[i].fd, &efds)) {
-			fds[i].revents = fds[i].events & (POLLERR|POLLHUP|POLLNVAL);
-			got = 1;
-		}
-		if (got == 1) {
-			//printf("fd=%d, revetns = %x\r\n", fds[i].fd, fds[i].revents);
-			ret++;
-		}
-	}
 
-	return ret;
-}
-#endif
 int send (int socket, const void *buffer, size_t size, int flags)
 {
     return lwip_send( socket, buffer, size, flags );
@@ -244,20 +169,4 @@ int getsockname (int s, struct sockaddr *name, socklen_t *namelen)
 {
 	return lwip_getsockname (s, name, namelen);
 }
-
-
-
-//
-//uint32_t inet_addr (const char *name)
-//{
-//    return ipaddr_addr( name );
-//}
-//
-//
-//char *inet_ntoa (struct in_addr addr)
-//{
-//
-//    return ipaddr_ntoa( (const ip_addr_t *) &(addr) );
-//
-//}
 

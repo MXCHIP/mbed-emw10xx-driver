@@ -1,114 +1,72 @@
-/*
- * Copyright 2013, Broadcom Corporation
- * All Rights Reserved.
+/* MiCO Team
+ * Copyright (c) 2017 MXCHIP Information Tech. Co.,Ltd
  *
- * This is UNPUBLISHED PROPRIETARY SOURCE CODE of Broadcom Corporation;
- * the contents of this file may not be disclosed to third parties, copied
- * or duplicated in any form, in whole or in part, without the prior
- * written permission of Broadcom Corporation.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-/*
- * Copyright (c) 2001-2003 Swedish Institute of Computer Science.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
- * SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
- * OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
- * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
- * OF SUCH DAMAGE.
- *
- * This file is part of the lwIP TCP/IP stack.
- *
- * Author: Adam Dunkels <adam@sics.se>
- *
- */
+
+
 #ifndef __LWIPOPTS_H__
 #define __LWIPOPTS_H__
 
 
-#ifdef TOOLCHAIN_GCC
-#define LWIP_TIMEVAL_PRIVATE 0
-#include <sys/time.h>
-#endif
-
 typedef struct
 {
-    /*@owned@*/  struct pbuf *  queue_next;
-#ifdef WICED_BUS_HAS_HEADER
-                 wiced_bus_header_t        bus_header;
-#endif /* ifdef WICED_BUS_HAS_HEADER */
-} wiced2_buffer_header_t;
+    struct pbuf *  queue_next;
+} wlan_buffer_header_t;
 
 /**
  * The space in bytes required for headers in front of the Ethernet header.
  */
-#define WICED_LINK_OVERHEAD_BELOW_ETHERNET_FRAME ( sizeof(wiced2_buffer_header_t) + 12 + 4 + 2 )
+#define MICO_LINK_OVERHEAD_BELOW_ETHERNET_FRAME ( sizeof(wlan_buffer_header_t) + 12 + 4 + 2 )
 
 /**
  * The maximum space in bytes required for headers in front of the Ethernet header.
- * This definition allows WICED to use a pre-built bus-generic network stack library regardless of choice of bus.
+ * This definition allows MICO to use a pre-built bus-generic network stack library regardless of choice of bus.
  * Note: adjust accordingly if a new bus is added.
  */
-#define WICED_LINK_OVERHEAD_BELOW_ETHERNET_FRAME_MAX ( 8 + 12 + 4 + 2 )
+#define MICO_LINK_OVERHEAD_BELOW_ETHERNET_FRAME_MAX ( 8 + 12 + 4 + 2 )
 
 /**
  * The space in bytes required after the end of an Ethernet packet
  */
-#define WICED_LINK_TAIL_AFTER_ETHERNET_FRAME     ( 0 )
+#define MICO_LINK_TAIL_AFTER_ETHERNET_FRAME     ( 0 )
 
 /**
  * The size of an Ethernet header
  */
-#define WICED_ETHERNET_SIZE         (14)
+#define MICO_ETHERNET_SIZE         (14)
 
 /**
- * The size in bytes of the Link layer header i.e. the Wiced specific headers and the Ethernet header
+ * The size in bytes of the Link layer header i.e. the MICO specific headers and the Ethernet header
  */
-#define WICED_PHYSICAL_HEADER       (WICED_LINK_OVERHEAD_BELOW_ETHERNET_FRAME_MAX + WICED_ETHERNET_SIZE)
+#define MICO_PHYSICAL_HEADER       (MICO_LINK_OVERHEAD_BELOW_ETHERNET_FRAME_MAX + MICO_ETHERNET_SIZE)
 
 /**
  * The size in bytes of the data after Link layer packet
  */
-#define WICED_PHYSICAL_TRAILER      (WICED_LINK_TAIL_AFTER_ETHERNET_FRAME)
+#define MICO_PHYSICAL_TRAILER      (MICO_LINK_TAIL_AFTER_ETHERNET_FRAME)
 
 /**
  * The maximum size in bytes of the data part of an Ethernet frame
  */
-#ifndef WICED_PAYLOAD_MTU
-#define WICED_PAYLOAD_MTU           (1500)
-#endif
+#define MICO_PAYLOAD_MTU           (1500)
 
-#define WICED_MONITOR_EXTRA_LENGTH (58)
+
+#define MICO_MONITOR_EXTRA_LENGTH (58)
 /**
- * The maximum size in bytes of a packet used within Wiced
+ * The maximum size in bytes of a packet used within MICO
  */
-#define WICED_LINK_MTU              (WICED_PAYLOAD_MTU + WICED_MONITOR_EXTRA_LENGTH + WICED_PHYSICAL_HEADER + WICED_PHYSICAL_TRAILER)
-
-
-/**
- * Ethernet Ethertypes
- */
-#define WICED_ETHERTYPE_IPv4    0x0800
-#define WICED_ETHERTYPE_IPv6    0x86DD
-#define WICED_ETHERTYPE_ARP     0x0806
-#define WICED_ETHERTYPE_RARP    0x8035
-#define WICED_ETHERTYPE_EAPOL   0x888E
+#define MICO_LINK_MTU              (MICO_PAYLOAD_MTU + MICO_MONITOR_EXTRA_LENGTH + MICO_PHYSICAL_HEADER + MICO_PHYSICAL_TRAILER)
 
 
 
@@ -162,7 +120,7 @@ typedef struct
  * designed to accomodate single full size TCP frame in one pbuf, including
  * TCP_MSS, IP header, and link header.
  */
-#define PBUF_POOL_BUFSIZE              (LWIP_MEM_ALIGN_SIZE(WICED_LINK_MTU) + LWIP_MEM_ALIGN_SIZE(sizeof(struct pbuf)) + 1)
+#define PBUF_POOL_BUFSIZE              (LWIP_MEM_ALIGN_SIZE(MICO_LINK_MTU) + LWIP_MEM_ALIGN_SIZE(sizeof(struct pbuf)) + 1)
 
 
 /**
@@ -173,7 +131,7 @@ typedef struct
  * an upper limit on the MSS advertised by the remote host.
  */
 #if 0
-#define TCP_MSS                        (WICED_PAYLOAD_MTU-20-20)  /* TODO: Cannot use full Ethernet MTU since LwIP concatenates segments which are too long. */
+#define TCP_MSS                        (MICO_PAYLOAD_MTU-20-20)  /* TODO: Cannot use full Ethernet MTU since LwIP concatenates segments which are too long. */
 #else /* if 0 */
 #define TCP_MSS                        (1152)
 #endif /* if 0 */
@@ -200,7 +158,7 @@ typedef struct
  */
 #define ETH_PAD_SIZE                   (0)
 
-#define SUB_ETHERNET_HEADER_SPACE      (WICED_LINK_OVERHEAD_BELOW_ETHERNET_FRAME)
+#define SUB_ETHERNET_HEADER_SPACE      (MICO_LINK_OVERHEAD_BELOW_ETHERNET_FRAME)
 
 
 /**
@@ -208,7 +166,7 @@ typedef struct
  * link level header. The default is 14, the standard value for
  * Ethernet.
  */
-#define PBUF_LINK_HLEN                 (WICED_PHYSICAL_HEADER)
+#define PBUF_LINK_HLEN                 (MICO_PHYSICAL_HEADER)
 
 
 /**
@@ -382,11 +340,11 @@ typedef struct
 /**
  * LWIP_STATS : Turn off statistics gathering
  */
-#ifdef WICED_LWIP_DEBUG
+#ifdef MICO_LWIP_DEBUG
 #define LWIP_STATS                     (1)
 #else
 #define LWIP_STATS                     (0)
-#endif /* ifdef WICED_LWIP_DEBUG */
+#endif /* ifdef MICO_LWIP_DEBUG */
 
 /**
  * Debug printing
@@ -394,7 +352,7 @@ typedef struct
  * This allows user to change any desired debug level to on.
  */
 
-#ifdef WICED_LWIP_DEBUG
+#ifdef MICO_LWIP_DEBUG
 #define LWIP_DEBUG
 #define MEMP_OVERFLOW_CHECK            ( 2 )
 #define MEMP_SANITY_CHECK              ( 1 )

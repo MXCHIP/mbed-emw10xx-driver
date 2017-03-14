@@ -9,6 +9,7 @@
  */
 
 #include "Network/wwd_buffer_interface.h"
+#include "Network/wwd_network_constants.h"
 #include "lwip/netbuf.h"
 #include "mico_rtos.h"
 #include "lwip/memp.h"

@@ -1,36 +1,21 @@
-/**
- ******************************************************************************
- * @file    mico_system.h
- * @author  William Xu
- * @version V1.0.0
- * @date    11-Aug-2015
- * @brief  This file provides all the headers for MiCO system functions, this is
- *         a application framework based on MiCO core APIs
- ******************************************************************************
+/* MiCO Team
+ * Copyright (c) 2017 MXCHIP Information Tech. Co.,Ltd
  *
- *  The MIT License
- *  Copyright (c) 2014 MXCHIP Inc.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *  Permission is hereby granted, free of charge, to any person obtaining a copy
- *  of this software and associated documentation files (the "Software"), to deal
- *  in the Software without restriction, including without limitation the rights
- *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *  copies of the Software, and to permit persons to whom the Software is furnished
- *  to do so, subject to the following conditions:
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- *  The above copyright notice and this permission notice shall be included in
- *  all copies or substantial portions of the Software.
- *
- *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- *  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
- *  IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- ******************************************************************************
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
-#pragma once
+#ifndef __MICO_SYSTEM_H__
+#define __MICO_SYSTEM_H__
 
 #include "mico_common.h"
 #include "system.h"
@@ -380,120 +365,6 @@ OSStatus mico_system_notify_remove_all( mico_notify_types_t notify_type);
 /** @} */
 
 
-/** @defgroup config_server System Config Server Daemon
-  * @brief Local network service, used to change MiCO system's configurations
-  * @{
-  */
-
-#if 0
-/**
-  * @brief  Start local config server.
-  * @note   This function can be called automatically by mico_system_init( )
-  *         if macro: MICO_CONFIG_SERVER_ENABLE is defined.
-  * @param  in_context: The address of the core data.
-  * @retval kNoErr is returned on success, otherwise, kXXXErr is returned.
-  */
-OSStatus config_server_start ( void );
-
-/**
-  * @brief  Stop local config server.
-  * @retval kNoErr is returned on success, otherwise, kXXXErr is returned.
-  */
-OSStatus config_server_stop ( void );
-
-/**
-  * @brief  Inform the application that configuration data is received from 
-  *         config client
-  * @note   This a delegate function, can be completed by developer.
-  * @param  key: The name of a configuration item.
-  * @param  value: The value of a configuration item, can be read use a json_object_get_xxx 
-  *         function from json_c library.
-  * @param  in_context: The address of the core data.
-  * @retval None.
-  */
-void config_server_delegate_recv( const char *key, json_object *value, bool *need_reboot, mico_Context_t *in_context );
-
-/**
-  * @brief  Inform the application that configuration server is collecting application's config data 
-  * @note   This a delegate function, can be completed by developer.
-  * @param  config_cell_list: The UI element container to store application's config data.
-  *         Developer can use config_server_create_xxx_cell functions to add customized UI element 
-  *         to config_cell_list.
-  * @param  in_context: The address of the core data.
-  * @retval None.
-  */
-void config_server_delegate_report( json_object *config_cell_list, mico_Context_t *in_context );
-
-/**
-  * @brief  Add a cell UI holds a string value. config_cell_list(1)<=config_cell(1).
-  * @param  config_cell_list: The config cell container.
-  * @param  name: String indicate the name of a config data.
-  * @param  content: String value of a config data.
-  * @param  privilege: The privilege of a value on config client.
-  *                    @arg "RO": Read only. @arg "RW": Read or write.
-  * @param  secectionArray: Generate a selection list for possible value, input NULL if not exist
-  * @retval kNoErr is returned on success, otherwise, kXXXErr is returned.
-  */
-OSStatus config_server_create_string_cell   (json_object* config_cell_list, char* const name, char* const content, char* const privilege, json_object* secectionArray);
-
-/**
-  * @brief  Add a cell UI holds a integer value. config_cell_list(1)<=config_cell(1).
-  * @param  config_cell_list: The config cell container.
-  * @param  name: String indicate the name of a config data.
-  * @param  content: Integer value of a config data.
-  * @param  privilege: The privilege of a value on config client.
-  *                    @arg "RO": Read only. @arg "RW": Read or write.
-  * @param  secectionArray: Generate a selection list for possible value, input NULL if not exist
-  * @retval kNoErr is returned on success, otherwise, kXXXErr is returned.
-  */
-OSStatus config_server_create_number_cell   (json_object* config_cell_list, char* const name, int content, char* const privilege, json_object* secectionArray);
-
-/**
-  * @brief  Add a cell UI holds a float value. config_cell_list(1)<=config_cell(1).
-  * @param  config_cell_list: The config cell container.
-  * @param  name: String indicate the name of a config data.
-  * @param  content: Float value of a config data.
-  * @param  privilege: The privilege of a value on config client.
-  *                    @arg "RO": Read only. @arg "RW": Read or write.
-  * @param  secectionArray: Generate a selection list for possible value
-  * @retval kNoErr is returned on success, otherwise, kXXXErr is returned.
-  */
-OSStatus config_server_create_float_cell    (json_object* config_cell_list, char* const name, float content, char* const privilege, json_object* secectionArray);
-
-/**
-  * @brief  Add a cell UI holds a bool value. config_cell_list(1)<=config_cell(1).
-  * @param  config_cell_list: The config cell container.
-  * @param  name: String indicate the name of a config data.
-  * @param  content: Bool value of a config data.
-  * @param  privilege: The privilege of a value on config client.
-  *                    @arg "RO": Read only. @arg "RW": Read or write.
-  * @param  secectionArray: Generate a selection list for possible value
-  * @retval kNoErr is returned on success, otherwise, kXXXErr is returned.
-  */
-OSStatus config_server_create_bool_cell     (json_object* config_cell_list, char* const name, boolean content, char* const privilege);
-
-/**
-  * @brief  Add a cell UI holds a sub menu, config_cell_list(1)<=sub_menu_array(1).
-  * @param  config_cell_list: The config cell container.
-  * @param  name: String indicate the name of a sub menu.
-  * @param  sub_menu_array: An array that buids a sub menu list.
-  * @retval kNoErr is returned on success, otherwise, kXXXErr is returned.
-  */
-OSStatus config_server_create_sub_menu_cell (json_object* config_cell_list, char* const name, json_object* sub_menu_array);
-
-/**
-  * @brief  Create a new config cell list to an exist menu. sub_menu_array(1)<=config_cell_list(n)
-  * @param  sub_menu_array: An array that buids a sub menu list.
-  * @param  name: String indicate the name of a config cell list.
-  * @param  config_cell_list: The config cell container.
-  * @retval kNoErr is returned on success, otherwise, kXXXErr is returned.
-  */
-OSStatus config_server_create_sector        (json_object* sub_menu_array, char* const name, json_object *config_cell_list);
-
-/** @} */
-#endif
-
-
 /** \defgroup cli System Command Line Interface
   * @brief MiCO command console
   * @{
@@ -745,3 +616,6 @@ void tftp_ota(void);
 #ifdef __cplusplus
 } /*extern "C" */
 #endif
+
+#endif
+
