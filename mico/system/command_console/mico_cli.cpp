@@ -500,17 +500,9 @@ static void get_version(char *pcWriteBuffer, int xWriteBufferLen,int argc, char 
   int ret;
   mico_sdk_version( &major, &minor, &revision );
   
-  cmd_printf( "Product module: %s\r\n", MODEL );
-  cmd_printf( "Hardware version: %s\r\n", HARDWARE_REVISION );
-  cmd_printf( "Manufacture: %s\r\n", MANUFACTURER );
   cmd_printf( "Kernel version: %s\r\n", MicoGetVer() );
-
   cmd_printf( "MiCO version: %d.%d.%d\r\n", major, minor, revision );
-  cmd_printf("Firmware version: %s\r\n", FIRMWARE_REVISION );
-  cmd_printf("Application info: %s\r\n", APP_INFO );
-#if defined MICO_COMPLETE_SYSTEM && (MICO_COMPLETE_SYSTEM == 1)
-  cmd_printf("Bootloader version: %s\r\n", mico_get_bootloader_ver() );
-#endif
+
   memset(ver, 0, sizeof(ver));
   ret = MicoGetRfVer(ver, sizeof(ver));
   if (ret == 0)

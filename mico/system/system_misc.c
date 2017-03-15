@@ -275,7 +275,7 @@ OSStatus mico_system_wlan_get_status( mico_system_status_wlan_t** status )
 
 void mico_app_info(char *str, int len)
 {
-  snprintf( str, len, "%s %s, build at %s %s", APP_INFO, FIRMWARE_REVISION, __TIME__, __DATE__);
+  //snprintf( str, len, "%s %s, build at %s %s", APP_INFO, FIRMWARE_REVISION, __TIME__, __DATE__);
 }
 
 
