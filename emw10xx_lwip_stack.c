@@ -879,17 +879,18 @@ static nsapi_size_or_error_t mbed_lwip_socket_sendto(nsapi_stack_t *stack, nsapi
         return NSAPI_ERROR_PARAMETER;
     }
 
-    struct netbuf buf;
     void * dst;
-
-    dst = netbuf_alloc(&buf, size);
-    if (dst == NULL)
+    struct netbuf *buf = netbuf_new();
+    dst = netbuf_alloc(buf, size);
+    if (dst == NULL){
+        netbuf_delete(buf);
         return NSAPI_ERROR_NO_MEMORY;
+    }
 
     memcpy(dst, (void *)data, size);
 
-    err = netconn_sendto(s->conn, &buf, &ip_addr, port);
-    netbuf_delete(&buf);
+    err = netconn_sendto(s->conn, buf, &ip_addr, port);
+    netbuf_delete(buf);
     if (err != ERR_OK) {
         return mbed_lwip_err_remap(err);
     }
