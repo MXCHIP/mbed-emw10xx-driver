@@ -848,19 +848,46 @@ static nsapi_size_or_error_t mbed_lwip_socket_recv(nsapi_stack_t *stack, nsapi_s
 
 static nsapi_size_or_error_t mbed_lwip_socket_sendto(nsapi_stack_t *stack, nsapi_socket_t handle, nsapi_addr_t addr, uint16_t port, const void *data, nsapi_size_t size)
 {
+#ifdef UN_COMPLETE_FUNCTION
+    struct lwip_socket *s = (struct lwip_socket *) handle;
+    ip_addr_t ip_addr;
+
+    if ( !convert_mbed_addr_to_lwip( &ip_addr, &addr ) ) {
+        return NSAPI_ERROR_PARAMETER;
+    }
+
+    struct netbuf *buf = netbuf_new( );
+    err_t err = netbuf_ref( buf, data, (u16_t) size );
+    if ( err != ERR_OK ) {
+        netbuf_free( buf );
+        return mbed_lwip_err_remap( err );
+    }
+
+    err = netconn_sendto( s->conn, buf, &ip_addr, port );
+    netbuf_delete( buf );
+    if ( err != ERR_OK ) {
+        return mbed_lwip_err_remap( err );
+    }
+
+    return size;
+#else
     struct lwip_socket *s = (struct lwip_socket *)handle;
     ip_addr_t ip_addr;
+    err_t err;
 
     if (!convert_mbed_addr_to_lwip(&ip_addr, &addr)) {
         return NSAPI_ERROR_PARAMETER;
     }
 
+    void * dst;
     struct netbuf *buf = netbuf_new();
-    err_t err = netbuf_ref(buf, data, (u16_t)size);
-    if (err != ERR_OK) {
-        netbuf_free(buf);
-        return mbed_lwip_err_remap(err);
+    dst = netbuf_alloc(buf, size);
+    if (dst == NULL){
+        netbuf_delete(buf);
+        return NSAPI_ERROR_NO_MEMORY;
     }
+
+    memcpy(dst, (void *)data, size);
 
     err = netconn_sendto(s->conn, buf, &ip_addr, port);
     netbuf_delete(buf);
@@ -869,6 +896,7 @@ static nsapi_size_or_error_t mbed_lwip_socket_sendto(nsapi_stack_t *stack, nsapi
     }
 
     return size;
+#endif
 }
 
 static nsapi_size_or_error_t mbed_lwip_socket_recvfrom(nsapi_stack_t *stack, nsapi_socket_t handle, nsapi_addr_t *addr, uint16_t *port, void *data, nsapi_size_t size)
