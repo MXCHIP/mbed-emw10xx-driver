@@ -97,7 +97,7 @@ typedef struct
     union
     {
         uint32_t v4;
-        uint32_t v6[4];
+        //uint32_t v6[4];
     } ip;
 } wiced_ip_address_t;
 
