@@ -32,6 +32,7 @@ static bool _emw10xx_inited = false;
 EMW10xxInterface::EMW10xxInterface(): _scan_res(0), _scan_sem(0), _scan_cnt(0), _conn_sem(0)
 {
     _is_sta_connected = false;
+    _is_ap_connected  = false;
 }
 
 int EMW10xxInterface::connect(const char *ssid, const char *pass, nsapi_security_t security,
@@ -45,6 +46,44 @@ int EMW10xxInterface::connect(const char *ssid, const char *pass, nsapi_security
     return connect();
 }
 
+int EMW10xxInterface::connect(const char * ssid,const char * pass,nsapi_security_t security,
+                                                                  uint8_t channel,wlanInterfaceTypedef type)
+{
+    if (channel != 0) {
+        return NSAPI_ERROR_UNSUPPORTED;
+    }
+        wifi_type=type;
+    set_credentials(ssid, pass, security);
+    return ap_mode();
+}
+
+int EMW10xxInterface::ap_mode(){
+	network_InitTypeDef_st wNetConfig;
+		/* Initialize wlan parameters */
+	memset( &wNetConfig, 0x0, sizeof(wNetConfig) );
+	strcpy((char*)wNetConfig.wifi_ssid, ap_ssid);
+	strcpy((char*)wNetConfig.wifi_key,ap_pass);
+	wNetConfig.dhcpMode=DHCP_Server;
+	wNetConfig.wifi_mode=wifi_type;
+	wNetConfig.wifi_retry_interval=100;
+            strcpy((char*)wNetConfig.local_ip_addr, "192.168.0.1");
+            strcpy((char*)wNetConfig.net_mask, "255.255.255.0");
+            strcpy((char*)wNetConfig.dnsServer_ip_addr, "192.168.0.1");
+	/* Start Now! */
+	micoWlanStart(&wNetConfig);
+
+            /* 10 seconds timeout */
+            while( 0 != _conn_sem.wait(0) );
+            _conn_sem.wait(20*1000);
+
+            if( _is_ap_connected == true )
+                    return NSAPI_ERROR_OK;
+            else{
+                    micoWlanSuspendStation();
+                    return NSAPI_ERROR_AUTH_FAILURE;
+            }
+
+}
 void EMW10xxInterface::_wlan_status_cb_by_mico( WiFiEvent event, void *inContext )
 {
     EMW10xxInterface *handler = (EMW10xxInterface*) inContext;
@@ -57,9 +96,11 @@ void EMW10xxInterface::_wlan_status_cb( WiFiEvent event )
         case NOTIFY_STATION_UP:
             _conn_sem.release( );
             _is_sta_connected = true;
+			_is_sta_connected = true;
             break;
         case NOTIFY_STATION_DOWN:
             _is_sta_connected = false;
+			_is_sta_connected = false;
             break;
         default:
             break;
