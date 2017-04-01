@@ -6,6 +6,7 @@
                    "-ffunction-sections", "-fdata-sections", "-funsigned-char",
                    "-MMD", "-fno-delete-null-pointer-checks",
                    "-fomit-frame-pointer", "-Os", "-ggdb", 
+                   "-Iemw10xx-driver/mico/",
                    "-Iemw10xx-driver/mico/include",
                    "-Iemw10xx-driver/mico/platform",
                    "-Iemw10xx-driver/mico/net/LwIP/lwip-ver1.4.0.rc1/src/include",
