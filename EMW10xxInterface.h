@@ -47,6 +47,14 @@ public:
      */
     virtual int connect();
 
+    /** Into Soft_AP mode.
+     *
+     * Attempts to go into  to Soft_AP mode.
+     * @return           0 on success, or error code on failure
+     */
+    int ap_mode(void);
+
+
     /** Start the interface
      *
      *  Attempts to connect to a WiFi network.
@@ -58,7 +66,21 @@ public:
      *  @return          0 on success, or error code on failure
      */
     virtual int connect(const char *ssid, const char *pass, nsapi_security_t security = NSAPI_SECURITY_NONE,
-                                  uint8_t channel = 0);
+                                  uint8_t channel = 0 );
+
+    /** Start the interface
+     *
+     *  Attempts to connect to a WiFi network.
+     *
+     *  @param ssid      Name of the network to connect to
+     *  @param pass      Security passphrase to connect to the network
+     *  @param security  Type of encryption for connection (Default: NSAPI_SECURITY_NONE)
+     *  @param channel   This parameter is not supported, setting it to anything else than 0 will result in NSAPI_ERROR_UNSUPPORTED
+     *  @param type      Wlan interface: Station or SoftAP
+     *  @return          0 on success, or error code on failure
+     */
+    int establish_softap(const char *ssid, const char *pass, nsapi_security_t security = NSAPI_SECURITY_NONE,
+                                  uint8_t channel = 0 );
 
     /** Set the WiFi network credentials
      *
@@ -78,6 +100,13 @@ public:
      *  @return          Not supported, returns NSAPI_ERROR_UNSUPPORTED
      */
     virtual int set_channel(uint8_t channel);
+
+    /** Set the WiFi network interface
+     *
+     *  @param interface   wlan interface, Station or SoftAP
+     *  @return          0, success
+     */
+    int set_interface( wlan_if_t interface );
 
     /** Stop the interface
      *  @return             0 on success, negative on failure
@@ -137,17 +166,21 @@ private:
     /* For scan */
     static void _scan_complete_cb_by_mico( ScanResult_adv *pApList, void *inContext );
     void _scan_complete_cb( ScanResult_adv *pApList );
+    int establish_ap( );
+    int connect_ap( );
     WiFiAccessPoint *_scan_res;
     Semaphore _scan_sem;
     unsigned _scan_cnt;
 
     /* For connection */
+    wlan_if_t _interface;
     char ap_ssid[33]; /* 32 is what 802.11 defines as longest possible name; +1 for the \0 */
     nsapi_security_t ap_sec;
     uint8_t ap_ch;
     char ap_pass[64]; /* The longest allowed passphrase */
     Semaphore _conn_sem;
     bool _is_sta_connected;
+    bool _is_ap_connected;
     static void _wlan_status_cb_by_mico( WiFiEvent event, void *inContext );
     void _wlan_status_cb( WiFiEvent event );
 
