@@ -662,15 +662,16 @@ netconn_write_partly(struct netconn *conn, const void *dataptr, size_t size, u8_
   err = TCPIP_APIMSG(&msg);
   if ((err == ERR_OK) && (bytes_written != NULL)) {
 #if LWIP_SO_SNDTIMEO
-    if (conn->send_timeout != 0)
+    //if (conn->send_timeout != 0)
 #endif /* LWIP_SO_SNDTIMEO */
     {
       /* nonblocking write: maybe the data has been sent partly */
       *bytes_written = msg.msg.msg.w.len;
-    } else {
-      /* blocking call succeeded: all data has been sent if it */
-      *bytes_written = size;
     }
+//    else {
+//      /* blocking call succeeded: all data has been sent if it */
+//      *bytes_written = size;
+//    }
   }
   NETCONN_SET_SAFE_ERR(conn, err);
   return err;
