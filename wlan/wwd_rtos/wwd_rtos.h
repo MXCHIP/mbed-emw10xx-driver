@@ -19,11 +19,6 @@
 
 #include "internal_mico_rtos.h"
 
-#define RTOS_HIGHER_PRIORTIY_THAN(x)     (x < RTOS_HIGHEST_PRIORITY ? x+1 : RTOS_HIGHEST_PRIORITY)
-#define RTOS_LOWER_PRIORTIY_THAN(x)      (x > RTOS_LOWEST_PRIORITY ? x-1 : RTOS_LOWEST_PRIORITY)
-#define RTOS_LOWEST_PRIORITY             (0)
-#define RTOS_HIGHEST_PRIORITY            (10-1)
-#define RTOS_DEFAULT_THREAD_PRIORITY     (1)
 
 #define WICED_PRIORITY_TO_NATIVE_PRIORITY(priority)     (uint8_t)(priority)
 
