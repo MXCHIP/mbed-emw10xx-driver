@@ -29,9 +29,16 @@ static bool _emw10xx_inited = false;
 
 
 /* Interface implementation */
-EMW10xxInterface::EMW10xxInterface(): _scan_res(0), _scan_sem(0), _scan_cnt(0), _conn_sem(0)
+EMW10xxInterface::EMW10xxInterface(): _scan_res(0), _scan_sem(0), _scan_cnt(0), _interface(Station),
+    _conn_sem(0), _is_sta_connected(false), _is_ap_connected(false)
 {
-    _is_sta_connected = false;
+
+}
+
+int EMW10xxInterface::set_interface( wlan_if_t interface )
+{
+    _interface = interface;
+    return NSAPI_ERROR_OK;
 }
 
 int EMW10xxInterface::connect(const char *ssid, const char *pass, nsapi_security_t security,
@@ -44,6 +51,7 @@ int EMW10xxInterface::connect(const char *ssid, const char *pass, nsapi_security
     set_credentials(ssid, pass, security);
     return connect();
 }
+
 
 void EMW10xxInterface::_wlan_status_cb_by_mico( WiFiEvent event, void *inContext )
 {
@@ -61,13 +69,22 @@ void EMW10xxInterface::_wlan_status_cb( WiFiEvent event )
         case NOTIFY_STATION_DOWN:
             _is_sta_connected = false;
             break;
+        case NOTIFY_AP_UP:
+            _conn_sem.release( );
+            _is_ap_connected = true;
+            break;
+        case NOTIFY_AP_DOWN:
+            _is_ap_connected = false;
+            break;
         default:
             break;
     }
     return;
 }
 
-int EMW10xxInterface::connect()
+
+
+int EMW10xxInterface::connect_ap( void )
 {
     network_InitTypeDef_adv_st  wNetConfigAdv;
 
@@ -96,8 +113,45 @@ int EMW10xxInterface::connect()
         return NSAPI_ERROR_OK;
     else{
         micoWlanSuspendStation();
-        return NSAPI_ERROR_AUTH_FAILURE;
+        return NSAPI_ERROR_NO_CONNECTION;
     }
+}
+
+int EMW10xxInterface::establish_ap( void )
+{
+    EMW10xx_DRIVER_INITED;
+
+    network_InitTypeDef_st wNetConfig;
+    /* Initialize wlan parameters */
+    memset( &wNetConfig, 0x0, sizeof(wNetConfig) );
+    strcpy( (char*) wNetConfig.wifi_ssid, ap_ssid );
+    strcpy( (char*) wNetConfig.wifi_key, ap_pass );
+    wNetConfig.dhcpMode = DHCP_Server;
+    wNetConfig.wifi_mode = Soft_AP;
+    wNetConfig.wifi_retry_interval = 100;
+    strcpy( (char*) wNetConfig.local_ip_addr, "192.168.0.1" );
+    strcpy( (char*) wNetConfig.net_mask, "255.255.255.0" );
+    strcpy( (char*) wNetConfig.dnsServer_ip_addr, "192.168.0.1" );
+    /* Start Now! */
+    micoWlanStart( &wNetConfig );
+
+    /* 10 seconds timeout */
+    while ( 0 != _conn_sem.wait( 0 ) );
+    _conn_sem.wait( 20 * 1000 );
+
+    if ( _is_ap_connected == true )
+        return NSAPI_ERROR_OK;
+    else {
+        micoWlanSuspendSoftAP( );
+        return NSAPI_ERROR_NO_CONNECTION;
+    }
+}
+
+int EMW10xxInterface::connect()
+{
+    if ( _interface == Station ) return connect_ap();
+    else if( _interface == Soft_AP ) return establish_ap();
+    else return NSAPI_ERROR_NO_CONNECTION;
 }
 
 int EMW10xxInterface::set_credentials(const char *ssid, const char *pass, nsapi_security_t security)
@@ -123,8 +177,18 @@ int EMW10xxInterface::set_channel(uint8_t channel)
 int EMW10xxInterface::disconnect()
 {
     EMW10xx_DRIVER_INITED;
-    micoWlanSuspendStation();
-    _is_sta_connected = false;
+
+    if( _interface == Station )
+    {
+        micoWlanSuspendStation();
+        _is_sta_connected = false;
+    }
+    else if( _interface == Soft_AP )
+    {
+        micoWlanSuspendSoftAP();
+        _is_ap_connected = false;
+    }
+
     return NSAPI_ERROR_OK;
 }
 
