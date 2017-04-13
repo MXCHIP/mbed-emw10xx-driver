@@ -59,8 +59,8 @@ extern const platform_gpio_t            platform_gpio_pins[];
 extern platform_gpio_driver_t           platform_gpio_drivers[];
 extern platform_gpio_irq_driver_t       platform_gpio_irq_drivers[];
 // extern const platform_adc_t             platform_adc_peripherals[];
-// extern const platform_i2c_t             platform_i2c_peripherals[];
-// extern platform_i2c_driver_t            platform_i2c_drivers[];
+extern const platform_i2c_t             platform_i2c_peripherals[];
+extern platform_i2c_driver_t            platform_i2c_drivers[];
 // extern const platform_pwm_t             platform_pwm_peripherals[];
 // extern const platform_spi_t             platform_spi_peripherals[];
 // extern platform_spi_driver_t            platform_spi_drivers[];
@@ -200,103 +200,107 @@ OSStatus mico_gpio_disable_irq( mico_gpio_t gpio )
     return (OSStatus) platform_gpio_irq_disable( &platform_gpio_irq_drivers[gpio] );
 }
 
-// OSStatus MicoI2cInitialize( mico_i2c_device_t* device )
-// {
-//   platform_i2c_config_t config;
-//   OSStatus result;
+OSStatus MicoI2cInitialize( mico_i2c_device_t* device )
+{
+    platform_i2c_config_t config;
+    OSStatus result;
 
-//   if ( device->port >= MICO_I2C_NONE )
-//     return kUnsupportedErr;
- 
-//   config.address       = device->address;
-//   config.address_width = device->address_width;
-//   config.flags         &= ~I2C_DEVICE_USE_DMA ;
-//   config.speed_mode    = device->speed_mode;
+    if ( device->port >= MICO_I2C_NONE )
+        return kUnsupportedErr;
 
-//   if( platform_i2c_drivers[device->port].i2c_mutex == NULL)
-//     mico_rtos_init_mutex( &platform_i2c_drivers[device->port].i2c_mutex );
-  
-//   mico_rtos_lock_mutex( &platform_i2c_drivers[device->port].i2c_mutex );
-//   result = (OSStatus) platform_i2c_init( &platform_i2c_peripherals[device->port], &config );
-//   mico_rtos_unlock_mutex( &platform_i2c_drivers[device->port].i2c_mutex );
+    config.address = device->address;
+    config.address_width = device->address_width;
+    config.flags &= ~I2C_DEVICE_USE_DMA;
+    config.speed_mode = device->speed_mode;
 
-//   return result;
-// }
+    if ( platform_i2c_drivers[device->port].i2c_mutex == NULL )
+        mico_rtos_init_mutex( &platform_i2c_drivers[device->port].i2c_mutex );
 
-// OSStatus MicoI2cFinalize( mico_i2c_device_t* device )
-// {
-//   platform_i2c_config_t config;
+    mico_rtos_lock_mutex( &platform_i2c_drivers[device->port].i2c_mutex );
+    result = (OSStatus) platform_i2c_init( &platform_i2c_drivers[device->port], &platform_i2c_peripherals[device->port], &config );
+    mico_rtos_unlock_mutex( &platform_i2c_drivers[device->port].i2c_mutex );
 
-//   if ( device->port >= MICO_I2C_NONE )
-//     return kUnsupportedErr;
-  
-//   config.address       = device->address;
-//   config.address_width = device->address_width;
-//   config.flags         &= ~I2C_DEVICE_USE_DMA ;
-//   config.speed_mode    = device->speed_mode;
+    return result;
+}
 
-//   if( platform_i2c_drivers[device->port].i2c_mutex != NULL){
-//     mico_rtos_deinit_mutex( &platform_i2c_drivers[device->port].i2c_mutex );
-//     platform_i2c_drivers[device->port].i2c_mutex = NULL;
-//   }
+OSStatus MicoI2cFinalize( mico_i2c_device_t* device )
+{
+    platform_i2c_config_t config;
+
+    if ( device->port >= MICO_I2C_NONE )
+        return kUnsupportedErr;
+
+    config.address = device->address;
+    config.address_width = device->address_width;
+    config.flags &= ~I2C_DEVICE_USE_DMA;
+    config.speed_mode = device->speed_mode;
+
+    if ( platform_i2c_drivers[device->port].i2c_mutex != NULL ) {
+        mico_rtos_deinit_mutex( &platform_i2c_drivers[device->port].i2c_mutex );
+        platform_i2c_drivers[device->port].i2c_mutex = NULL;
+    }
+
+    return (OSStatus) platform_i2c_deinit(  &platform_i2c_drivers[device->port], &config );
+}
+
+bool MicoI2cProbeDevice( mico_i2c_device_t* device, int retries )
+{
+    bool ret;
+    platform_i2c_config_t config;
+
+    if ( device->port >= MICO_I2C_NONE )
+        return kUnsupportedErr;
+
+    config.address = device->address;
+    config.address_width = device->address_width;
+    config.flags &= ~I2C_DEVICE_USE_DMA;
+    config.speed_mode = device->speed_mode;
+
+    mico_rtos_lock_mutex( &platform_i2c_drivers[device->port].i2c_mutex );
+    ret = platform_i2c_probe_device( &platform_i2c_drivers[device->port], &config, retries );
+    mico_rtos_unlock_mutex( &platform_i2c_drivers[device->port].i2c_mutex );
     
-//   return (OSStatus) platform_i2c_deinit( &platform_i2c_peripherals[device->port], &config );
-// }
+    return ret;
+}
 
-// bool MicoI2cProbeDevice( mico_i2c_device_t* device, int retries )
-// {
-//   bool ret;
-//   platform_i2c_config_t config;
+OSStatus MicoI2cBuildTxMessage( mico_i2c_message_t* message, const void* tx_buffer, uint16_t tx_buffer_length,
+                                uint16_t retries )
+{
+    return (OSStatus) platform_i2c_init_tx_message( message, tx_buffer, tx_buffer_length, retries );
+}
 
-//   if ( device->port >= MICO_I2C_NONE )
-//     return kUnsupportedErr;
-  
-//   config.address       = device->address;
-//   config.address_width = device->address_width;
-//   config.flags         &= ~I2C_DEVICE_USE_DMA ;
-//   config.speed_mode    = device->speed_mode;
+OSStatus MicoI2cBuildRxMessage( mico_i2c_message_t* message, void* rx_buffer, uint16_t rx_buffer_length,
+                                uint16_t retries )
+{
+    return (OSStatus) platform_i2c_init_rx_message( message, rx_buffer, rx_buffer_length, retries );
+}
 
-//   mico_rtos_lock_mutex( &platform_i2c_drivers[device->port].i2c_mutex );
-//   ret = platform_i2c_probe_device( &platform_i2c_peripherals[device->port], &config, retries );
-//   mico_rtos_unlock_mutex( &platform_i2c_drivers[device->port].i2c_mutex );
+OSStatus MicoI2cBuildCombinedMessage( mico_i2c_message_t* message, const void* tx_buffer, void* rx_buffer,
+                                      uint16_t tx_buffer_length, uint16_t rx_buffer_length, uint16_t retries )
+{
+    return (OSStatus) platform_i2c_init_combined_message( message, tx_buffer, rx_buffer, tx_buffer_length,
+                                                          rx_buffer_length, retries );
+}
 
-//   return ret;
-// }
+OSStatus MicoI2cTransfer( mico_i2c_device_t* device, mico_i2c_message_t* messages, uint16_t number_of_messages )
+{
+    OSStatus err = kNoErr;
+    platform_i2c_config_t config;
 
-// OSStatus MicoI2cBuildTxMessage( mico_i2c_message_t* message, const void* tx_buffer, uint16_t  tx_buffer_length, uint16_t retries )
-// {
-//   return (OSStatus) platform_i2c_init_tx_message( message, tx_buffer, tx_buffer_length, retries );
-// }
+    if ( device->port >= MICO_I2C_NONE )
+        return kUnsupportedErr;
 
-// OSStatus MicoI2cBuildRxMessage( mico_i2c_message_t* message, void* rx_buffer, uint16_t rx_buffer_length, uint16_t retries )
-// {
-//   return (OSStatus) platform_i2c_init_rx_message( message, rx_buffer, rx_buffer_length, retries );
-// }
+    config.address = device->address;
+    config.address_width = device->address_width;
+    config.flags &= ~I2C_DEVICE_USE_DMA;
+    config.speed_mode = device->speed_mode;
 
-// OSStatus MicoI2cBuildCombinedMessage( mico_i2c_message_t* message, const void* tx_buffer, void* rx_buffer, uint16_t tx_buffer_length, uint16_t rx_buffer_length, uint16_t retries )
-// {
-//   return (OSStatus) platform_i2c_init_combined_message( message, tx_buffer, rx_buffer, tx_buffer_length, rx_buffer_length, retries );
-// }
+    mico_rtos_lock_mutex( &platform_i2c_drivers[device->port].i2c_mutex );
+    err = platform_i2c_transfer( &platform_i2c_drivers[device->port], &config, messages, number_of_messages );
+    mico_rtos_unlock_mutex( &platform_i2c_drivers[device->port].i2c_mutex );
 
-// OSStatus MicoI2cTransfer( mico_i2c_device_t* device, mico_i2c_message_t* messages, uint16_t number_of_messages )
-// {
-//   OSStatus err = kNoErr;
-//   platform_i2c_config_t config;
-  
-//   if ( device->port >= MICO_I2C_NONE )
-//     return kUnsupportedErr;
-
-//   config.address       = device->address;
-//   config.address_width = device->address_width;
-//   config.flags         &= ~I2C_DEVICE_USE_DMA ;
-//   config.speed_mode    = device->speed_mode;
-  
-//   mico_rtos_lock_mutex( &platform_i2c_drivers[device->port].i2c_mutex );
-//   err = platform_i2c_transfer( &platform_i2c_peripherals[device->port], &config, messages, number_of_messages );
-//   mico_rtos_unlock_mutex( &platform_i2c_drivers[device->port].i2c_mutex );
-
-//   return err;
-// }
+    return err;
+}
 
 // void MicoMcuPowerSaveConfig( int enable )
 // {
