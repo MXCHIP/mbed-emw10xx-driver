@@ -160,15 +160,15 @@ static OSStatus i2c_transfer_message( platform_i2c_driver_t* driver, const platf
 
     if ( message->tx_buffer != NULL ) {
         for( ; retries > 0; --retries ) {
-            ret = i2c_write( &driver->i2c, (int) config->address, (char *) (message->tx_buffer), message->tx_length, stop );
-            if( ret == -1 ) break;
+            ret = i2c_write( &driver->i2c, (int)(config->address << 1), (char *) (message->tx_buffer), message->tx_length, stop );
+            if( ret == message->tx_length ) break;
         }
     }
 
     if ( message->rx_buffer != NULL ) {
         for( ; retries > 0; --retries ) {
-            ret = i2c_read( &driver->i2c, (int) config->address, (char *) (message->rx_buffer), message->rx_length, 1 );
-            if( ret == -1 ) break;
+            ret = i2c_read( &driver->i2c, (int)(config->address << 1), (char *) (message->rx_buffer), message->rx_length, 1 );
+            if( ret == message->rx_length ) break;
         }
     }
 
@@ -204,14 +204,13 @@ OSStatus platform_i2c_deinit( platform_i2c_driver_t* driver, const platform_i2c_
 static OSStatus i2c_address_device( platform_i2c_driver_t* driver, const platform_i2c_config_t* config, int retries, uint8_t direction )
 {
     OSStatus err = kTimeoutErr;
-    char data = 0;
     int ret = -1;
 
     /* Some chips( authentication and security related chips ) has to be addressed several times before they acknowledge their address */
     for ( ; retries != 0 ; --retries )
     {
-        ret = i2c_write((i2c_t *)&driver->i2c, (int)config->address, &data, 1, 1);
-        if(1 == ret) {
+        ret = i2c_write((i2c_t *)&driver->i2c, (int)(config->address << 1), NULL, 0, 1);
+        if(0 == ret) {
             err = kNoErr;
             break;
         }
