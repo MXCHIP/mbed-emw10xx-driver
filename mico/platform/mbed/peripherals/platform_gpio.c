@@ -17,7 +17,7 @@
 
 #include "platform_peripheral.h"
 #include "pinmap.h"
-#include "platform/critical.h"
+#include "mbed_critical.h"
 
 
 /******************************************************

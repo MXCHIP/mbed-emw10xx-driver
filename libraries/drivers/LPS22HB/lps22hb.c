@@ -1,25 +1,24 @@
-/**
- ******************************************************************************
- * @file    lps25hb.c
- * @author  MEMS Application Team
- * @version V1.2.0
- * @date    28-January-2015
- * @brief   This file provides a set of functions needed to manage the lps25hb.
- ******************************************************************************
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
+/* MiCO Team
+ * Copyright (c) 2017 MXCHIP Information Tech. Co.,Ltd
  *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
- ******************************************************************************
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 /* Includes ------------------------------------------------------------------*/
-#include "lps25hb.h"
+#include "lps22hb.h"
 
-#define lps25hb_log(M, ...) custom_log("LPS25HB", M, ##__VA_ARGS__)
-#define lps25hb_log_trace() custom_log_trace("LPS25HB")
+#define lps25hb_log(M, ...) custom_log("LPS22HB", M, ##__VA_ARGS__)
+#define lps25hb_log_trace() custom_log_trace("LPS22HB")
 
 
 

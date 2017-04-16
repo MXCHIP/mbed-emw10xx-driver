@@ -169,7 +169,7 @@ void OLED_Clear(void);
  * 
  * @return none
  */
-void OLED_ShowString(u8 x,u8 y, char *p);
+void OLED_ShowString(u8 x,u8 y, const char *p);
 /**
   * @}
   */

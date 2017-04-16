@@ -491,24 +491,24 @@ void mico_board_init( void )
 void MicoSysLed( bool onoff )
 {
     if ( onoff ) {
-        mico_gpio_output_low( (mico_gpio_t) MICO_SYS_LED );
+        mico_gpio_output_low( MICO_SYS_LED );
     } else {
-        mico_gpio_output_high( (mico_gpio_t) MICO_SYS_LED );
+        mico_gpio_output_high( MICO_SYS_LED );
     }
 }
 
 void MicoRfLed( bool onoff )
 {
     if ( onoff ) {
-        mico_gpio_output_low( (mico_gpio_t) MICO_RF_LED );
+        mico_gpio_output_low( MICO_RF_LED );
     } else {
-        mico_gpio_output_high( (mico_gpio_t) MICO_RF_LED );
+        mico_gpio_output_high( MICO_RF_LED );
     }
 }
 
 bool MicoShouldEnterMFGMode( void )
 {
-    if ( MicoGpioInputGet( (mico_gpio_t) BOOT_SEL ) == false && MicoGpioInputGet( (mico_gpio_t) MFG_SEL ) == false )
+    if ( mico_gpio_input_get( BOOT_SEL ) == false && mico_gpio_input_get( MFG_SEL ) == false )
         return true;
     else
         return false;
@@ -516,7 +516,7 @@ bool MicoShouldEnterMFGMode( void )
 
 bool MicoShouldEnterBootloader( void )
 {
-    if ( MicoGpioInputGet( (mico_gpio_t) BOOT_SEL ) == false && MicoGpioInputGet( (mico_gpio_t) MFG_SEL ) == true )
+    if ( mico_gpio_input_get( BOOT_SEL ) == false && mico_gpio_input_get( MFG_SEL ) == true )
         return true;
     else
         return false;
