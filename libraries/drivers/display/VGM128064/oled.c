@@ -180,6 +180,21 @@ void OLED_Clear(void)
   } //������ʾ
 }
 
+//��������,������,������Ļ�Ǻ�ɫ��!��û����һ��!!!
+void OLED_FillAll(void)
+{
+  u8 i;
+  uint8_t tmp_cmd[3] = {0X0, 0x00, 0x10};
+  uint8_t tmp[128];
+  memset( tmp, 0xFF, 128 );
+  for(i=0;i<8;i++)
+  {
+    tmp_cmd[0] = 0xb0+i;
+    OLED_WR_Bytes( tmp_cmd, 3, OLED_CMD);
+    OLED_WR_Bytes( tmp, 128, OLED_DATA);
+  } //������ʾ
+}
+
 
 //��ָ��λ����ʾһ���ַ�,���������ַ�
 //x:0~127

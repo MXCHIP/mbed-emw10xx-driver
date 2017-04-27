@@ -130,31 +130,41 @@ bool platform_gpio_input_get( platform_gpio_driver_t* driver )
 static void _irq_handler( uint32_t id, gpio_irq_event event )
 {
     platform_gpio_irq_driver_t* irq_driver = (platform_gpio_irq_driver_t*) id;
-    if( irq_driver->fun ) irq_driver->fun( irq_driver->arg );
+    switch (event) {
+        case IRQ_RISE: irq_driver->_rise(irq_driver->arg_rise); break;
+        case IRQ_FALL: irq_driver->_fall(irq_driver->arg_fall); break;
+        case IRQ_NONE: break;
+    }
 }
 
 OSStatus platform_gpio_irq_enable( platform_gpio_irq_driver_t* irq_driver,  const platform_gpio_t* gpio, platform_gpio_irq_trigger_t trigger, platform_gpio_irq_callback_t handler, void* arg )
 {
     core_util_critical_section_enter();
     gpio_irq_init( &irq_driver->gpio_irq, gpio->mbed_pin, _irq_handler, (uint32_t) irq_driver );
-    irq_driver->fun = handler;
-    irq_driver->arg = arg;
 
     switch ( trigger )
     {
         case IRQ_TRIGGER_RISING_EDGE: {
             gpio_irq_set( &irq_driver->gpio_irq, IRQ_RISE, 1 );
             gpio_irq_set( &irq_driver->gpio_irq, IRQ_FALL, 0 );
+            irq_driver->_rise = handler;
+            irq_driver->arg_rise = arg;
             break;
         }
         case IRQ_TRIGGER_FALLING_EDGE: {
             gpio_irq_set( &irq_driver->gpio_irq, IRQ_RISE, 0 );
             gpio_irq_set( &irq_driver->gpio_irq, IRQ_FALL, 1 );
+            irq_driver->_fall = handler;
+            irq_driver->arg_fall = arg;
             break;
         }
         case IRQ_TRIGGER_BOTH_EDGES: {
             gpio_irq_set( &irq_driver->gpio_irq, IRQ_RISE, 1 );
             gpio_irq_set( &irq_driver->gpio_irq, IRQ_FALL, 1 );
+            irq_driver->_rise = handler;
+            irq_driver->arg_rise = arg;
+            irq_driver->_fall = handler;
+            irq_driver->arg_fall = arg;
             break;
         }
         default: {
@@ -174,8 +184,8 @@ OSStatus platform_gpio_irq_disable( platform_gpio_irq_driver_t* irq_driver )
 {
     platform_mcu_powersave_disable( );
 
-    irq_driver->fun = NULL;
-    irq_driver->arg = NULL;
+    irq_driver->_rise = NULL;
+    irq_driver->_fall = NULL;
     gpio_irq_free( &irq_driver->gpio_irq );
 
     platform_mcu_powersave_enable( );

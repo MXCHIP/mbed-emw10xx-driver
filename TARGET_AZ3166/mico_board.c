@@ -327,8 +327,8 @@ const platform_logic_partition_t mico_partitions[] =
  */
 const platform_gpio_t wifi_control_pins[] =
 {
-    [WIFI_PIN_RESET      ] = { PA_8 },
-    [WIFI_PIN_32K_CLK    ] = { PA_9 },
+    [WIFI_PIN_RESET      ] = { PA_9 },
+    [WIFI_PIN_32K_CLK    ] = { PA_8 },
 };
 
 platform_gpio_driver_t      wifi_control_pin_drivers[WIFI_PIN_CONTROL_MAX];
