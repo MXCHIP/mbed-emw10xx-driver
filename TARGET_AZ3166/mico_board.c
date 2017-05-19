@@ -99,28 +99,14 @@ platform_gpio_irq_driver_t  platform_gpio_irq_drivers[MICO_GPIO_MAX];
 //   [MICO_ADC_2] = { ADC1, ADC_Channel_5, RCC_APB2Periph_ADC1, 1, (platform_gpio_t*)&platform_gpio_pins[MICO_GPIO_34] },
 // };
 
-// const platform_i2c_t platform_i2c_peripherals[] =
-// {
-//   [MICO_I2C_1] =
-//   {
-//     .port                         = I2C1,
-//     .pin_scl                      = &platform_gpio_pins[MICO_GPIO_17],
-//     .pin_sda                      = &platform_gpio_pins[MICO_GPIO_18],
-//     .peripheral_clock_reg         = RCC_APB1Periph_I2C1,
-//     .tx_dma                       = DMA1,
-//     .tx_dma_peripheral_clock      = RCC_AHB1Periph_DMA1,
-//     .tx_dma_stream                = DMA1_Stream1,
-//     .rx_dma_stream                = DMA1_Stream0,
-//     .tx_dma_stream_id             = 1,
-//     .rx_dma_stream_id             = 0,
-//     .tx_dma_channel               = DMA_Channel_0,
-//     .rx_dma_channel               = DMA_Channel_1,
-//     .gpio_af_scl                  = GPIO_AF_I2C1,
-//     .gpio_af_sda                  = GPIO_AF_I2C1
-//   },
-// };
+const platform_i2c_t platform_i2c_peripherals[] = {
+    [MICO_I2C_1] = {
+        .mbed_scl_pin = I2C_SCL,
+        .mbed_sda_pin = I2C_SDA,
+    }
+};
 
-// platform_i2c_driver_t platform_i2c_drivers[MICO_I2C_MAX];
+platform_i2c_driver_t platform_i2c_drivers[MICO_I2C_MAX];
 
 // const platform_uart_t platform_uart_peripherals[] =
 // {
@@ -502,38 +488,38 @@ void mico_board_init( void )
 #endif
 }
 
- void MicoSysLed(bool onoff)
- {
-   if (onoff) {
-       mico_gpio_output_low( (mico_gpio_t)MICO_SYS_LED );
-   } else {
-       mico_gpio_output_high( (mico_gpio_t)MICO_SYS_LED );
-   }
- }
+void MicoSysLed( bool onoff )
+{
+    if ( onoff ) {
+        mico_gpio_output_low( MICO_SYS_LED );
+    } else {
+        mico_gpio_output_high( MICO_SYS_LED );
+    }
+}
 
- void MicoRfLed(bool onoff)
- {
-   if (onoff) {
-       mico_gpio_output_low( (mico_gpio_t)MICO_RF_LED );
-   } else {
-       mico_gpio_output_high( (mico_gpio_t)MICO_RF_LED );
-   }
- }
+void MicoRfLed( bool onoff )
+{
+    if ( onoff ) {
+        mico_gpio_output_low( MICO_RF_LED );
+    } else {
+        mico_gpio_output_high( MICO_RF_LED );
+    }
+}
 
-// bool MicoShouldEnterMFGMode(void)
-// {
-//   if(MicoGpioInputGet((mico_gpio_t)BOOT_SEL)==false && MicoGpioInputGet((mico_gpio_t)MFG_SEL)==false)
-//     return true;
-//   else
-//   return false;
-// }
+bool MicoShouldEnterMFGMode( void )
+{
+    if ( mico_gpio_input_get( BOOT_SEL ) == false && mico_gpio_input_get( MFG_SEL ) == false )
+        return true;
+    else
+        return false;
+}
 
-// bool MicoShouldEnterBootloader(void)
-// {
-//   if(MicoGpioInputGet((mico_gpio_t)BOOT_SEL)==false && MicoGpioInputGet((mico_gpio_t)MFG_SEL)==true)
-//     return true;
-//   else
-//   return false;
-// }
+bool MicoShouldEnterBootloader( void )
+{
+    if ( mico_gpio_input_get( BOOT_SEL ) == false && mico_gpio_input_get( MFG_SEL ) == true )
+        return true;
+    else
+        return false;
+}
 
 
