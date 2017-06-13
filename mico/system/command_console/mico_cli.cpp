@@ -533,38 +533,6 @@ static void echo_cmd_handler(char *pcWriteBuffer, int xWriteBufferLen,int argc, 
   }
 }
 
-static void wifi_setssid_Command(char *pcWriteBuffer, int xWriteBufferLen,int argc, char **argv)
-{
-  if (argc == 1) {
-    cmd_printf("Usage: setssid ssid. Please provide the value of SSIS\r\n");
-    return;
-  }
-  
-  cmd_printf("TODO: setssid %s\r\n", argv[1]);
-}
-
-
-static void wifi_setpass_Command(char *pcWriteBuffer, int xWriteBufferLen,int argc, char **argv)
-{
-  if (argc == 1) {
-    cmd_printf("Usage: setpass password. Please provide the password of Wifi\r\n");
-    return;
-  }
-  
-  cmd_printf("TODO: setpass %s\r\n", argv[1]);
-}
-
-static void wifi_setAzureIotConn_Command(char *pcWriteBuffer, int xWriteBufferLen,int argc, char **argv)
-{
-  if (argc == 1) {
-    cmd_printf("Usage: setpass AzureIotConn. Please provide the Azure IOT connection string.\r\n");
-    return;
-  }
-  
-  cmd_printf("TODO: setAzureIotConn %s\r\n", argv[1]);
-}
-
-
 static void cli_exit_handler(char *pcWriteBuffer, int xWriteBufferLen,int argc, char **argv)
 {
   // exit command not executed
@@ -604,9 +572,6 @@ static const struct cli_command built_ins[] = {
   {"reboot",   "reboot MiCO system",          reboot},
   {"time",     "system time",                 uptime_Command},
   {"flash",    "Flash memory map",            partShow_Command},
-  {"setssid",   "Set WIFI SSID",          wifi_setssid_Command},
-  {"setpass",     "Set Wifi password",           wifi_setpass_Command},
-  {"setAzureIotConn",    "Set Azure IOT connection string",    wifi_setAzureIotConn_Command},
 };
 
 /* Built-in "help" command: prints all registered commands and their help
