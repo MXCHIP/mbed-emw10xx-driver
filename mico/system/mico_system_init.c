@@ -93,7 +93,7 @@ OSStatus mico_system_init( mico_Context_t* in_context )
 
 #ifdef MICO_CLI_ENABLE
   /* MiCO command line interface */
-  cli_init();
+  //cli_init();
 #endif
 
   /* Network PHY driver and tcp/ip static init */

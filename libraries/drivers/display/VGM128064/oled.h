@@ -1,18 +1,17 @@
-/**
- ******************************************************************************
- * @file    oled.h
- * @author  Eshen Wang
- * @version V1.0.0
- * @date    17-Mar-2015
- * @brief   OLED control operations.
- ******************************************************************************
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
+/* MiCO Team
+ * Copyright (c) 2017 MXCHIP Information Tech. Co.,Ltd
  *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
- ******************************************************************************
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #ifndef __OLED_H_
@@ -132,7 +131,6 @@ void OLED_Display_Off(void);
 
 void OLED_DrawPoint(u8 x,u8 y,u8 t);
 void OLED_Fill(u8 x1,u8 y1,u8 x2,u8 y2,u8 dot);
-void OLED_FillAll(void);
 void OLED_ShowChar(u8 x,u8 y,u8 chr);
 void OLED_ShowNum(u8 x,u8 y,u32 num,u8 len,u8 size);
 
@@ -170,7 +168,7 @@ void OLED_Clear(void);
  * 
  * @return none
  */
-void OLED_ShowString(u8 x,u8 y, const char *p);
+void OLED_ShowString(u8 x,u8 y, char *p);
 /**
   * @}
   */
