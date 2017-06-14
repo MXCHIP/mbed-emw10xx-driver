@@ -92,7 +92,7 @@ static uint8_t *cli_rx_data;
 static int cli_putstr(const char *msg);
 #endif
 
-Serial pc_cli(STDIO_UART_TX, STDIO_UART_RX, 115200);
+MbedSerial pc_cli(STDIO_UART_TX, STDIO_UART_RX, 115200);
 
 /* Find the command 'name' in the cli commands table.
 * If len is 0 then full match will be performed else upto len bytes.
