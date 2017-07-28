@@ -474,12 +474,12 @@ void mico_board_init( void )
 //     mico_gpio_initialize( (mico_gpio_t) MFG_SEL, INPUT_PULL_UP );
 
 //     //  Initialise EasyLink buttons
-//     init.gpio = EasyLink_BUTTON;
-//     init.pressed_func = PlatformEasyLinkButtonClickedCallback;
-//     init.long_pressed_func = PlatformEasyLinkButtonLongPressedCallback;
-//     init.long_pressed_timeout = 5000;
+//     // init.gpio = EasyLink_BUTTON;
+//     // init.pressed_func = PlatformEasyLinkButtonClickedCallback;
+//     // init.long_pressed_func = PlatformEasyLinkButtonLongPressedCallback;
+//     // init.long_pressed_timeout = 5000;
 
-//     button_init( IOBUTTON_EASYLINK, init );
+//     // button_init( IOBUTTON_EASYLINK, init );
 
 // #ifdef USE_MiCOKit_EXT
 //     dc_motor_init( );
