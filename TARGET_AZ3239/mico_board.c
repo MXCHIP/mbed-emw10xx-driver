@@ -338,7 +338,7 @@ platform_gpio_driver_t      wifi_control_pin_drivers[WIFI_PIN_CONTROL_MAX];
 /* Wi-Fi SDIO bus pins. Used by platform/MCU/STM32F4xx/wlan_bus_driver/wlan_SDIO.c */
 const platform_gpio_t wifi_sdio_pins[] =
 {
-  [WIFI_PIN_SDIO_OOB_IRQ] = { SDIO_OOB_IRQ },
+  //[WIFI_PIN_SDIO_OOB_IRQ] = { SDIO_OOB_IRQ },
   [WIFI_PIN_SDIO_CLK    ] = { SDIO_CLK },
   [WIFI_PIN_SDIO_CMD    ] = { SDIO_CMD },
   [WIFI_PIN_SDIO_D0     ] = { SDIO_D0 },
@@ -461,33 +461,33 @@ void platform_init_peripheral_irq_priorities( void )
 
 void mico_board_init( void )
 {
-    button_init_t init;
+//     button_init_t init;
 
-    platform_init_peripheral_irq_priorities();
+//     platform_init_peripheral_irq_priorities();
 
-    mico_gpio_initialize( (mico_gpio_t) MICO_SYS_LED, OUTPUT_PUSH_PULL );
-    mico_gpio_output_low( (mico_gpio_t) MICO_SYS_LED );
-    mico_gpio_initialize( (mico_gpio_t) MICO_RF_LED, OUTPUT_OPEN_DRAIN_NO_PULL );
-    mico_gpio_output_high( (mico_gpio_t) MICO_RF_LED );
+//     mico_gpio_initialize( (mico_gpio_t) MICO_SYS_LED, OUTPUT_PUSH_PULL );
+//     mico_gpio_output_low( (mico_gpio_t) MICO_SYS_LED );
+//     mico_gpio_initialize( (mico_gpio_t) MICO_RF_LED, OUTPUT_OPEN_DRAIN_NO_PULL );
+//     mico_gpio_output_high( (mico_gpio_t) MICO_RF_LED );
 
-    mico_gpio_initialize( (mico_gpio_t) BOOT_SEL, INPUT_PULL_UP );
-    mico_gpio_initialize( (mico_gpio_t) MFG_SEL, INPUT_PULL_UP );
+//     mico_gpio_initialize( (mico_gpio_t) BOOT_SEL, INPUT_PULL_UP );
+//     mico_gpio_initialize( (mico_gpio_t) MFG_SEL, INPUT_PULL_UP );
 
-    //  Initialise EasyLink buttons
-    init.gpio = EasyLink_BUTTON;
-    init.pressed_func = PlatformEasyLinkButtonClickedCallback;
-    init.long_pressed_func = PlatformEasyLinkButtonLongPressedCallback;
-    init.long_pressed_timeout = 5000;
+//     //  Initialise EasyLink buttons
+//     init.gpio = EasyLink_BUTTON;
+//     init.pressed_func = PlatformEasyLinkButtonClickedCallback;
+//     init.long_pressed_func = PlatformEasyLinkButtonLongPressedCallback;
+//     init.long_pressed_timeout = 5000;
 
-    button_init( IOBUTTON_EASYLINK, init );
+//     button_init( IOBUTTON_EASYLINK, init );
 
-#ifdef USE_MiCOKit_EXT
-    dc_motor_init( );
-    dc_motor_set( 0 );
+// #ifdef USE_MiCOKit_EXT
+//     dc_motor_init( );
+//     dc_motor_set( 0 );
 
-    rgb_led_init();
-    rgb_led_open(0, 0, 0);
-#endif
+//     rgb_led_init();
+//     rgb_led_open(0, 0, 0);
+// #endif
 }
 
  void MicoSysLed(bool onoff)
