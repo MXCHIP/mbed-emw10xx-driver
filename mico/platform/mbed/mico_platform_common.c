@@ -312,7 +312,7 @@ OSStatus MicoI2cTransfer( mico_i2c_device_t* device, mico_i2c_message_t* message
 
 void MicoSystemStandBy( uint32_t secondsToWakeup )
 {
-   //platform_mcu_enter_standby( secondsToWakeup );
+	platform_mcu_enter_standby( secondsToWakeup );
 }
 
 

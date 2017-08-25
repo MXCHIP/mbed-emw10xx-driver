@@ -15,6 +15,9 @@
  */
 
 #include "platform_peripheral.h"
+#include "stm32f412zx.h"
+
+RTC_HandleTypeDef RTCHandle;
 
 OSStatus platform_mcu_powersave_disable( void )
 {
@@ -26,4 +29,20 @@ OSStatus platform_mcu_powersave_enable( void )
     return kUnsupportedErr;
 }
 
+void platform_mcu_enter_standby( uint32_t secondsToWakeup )
+{
+    time_t seconds;
+    struct time * timeinfo;
+
+    rtc_init();
+    //clear WUF flag
+    SET_BIT(PWR->CR , (PWR_FLAG_WU) << 2U);
+
+    RTCHandle.Instance = RTC;
+
+    HAL_RTCEx_SetWakeUpTimer_IT(&RTCHandle, secondsToWakeup,
+                                    RTC_WAKEUPCLOCK_CK_SPRE_16BITS);
+
+    HAL_PWR_EnterSTANDBYMode( );
+}
 
