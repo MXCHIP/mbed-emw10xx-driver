@@ -238,8 +238,6 @@ OSStatus mico_rtos_create_thread( mico_thread_t* thread, uint8_t priority, const
 	if (thread_id == NULL)
 		return kNoMemoryErr;
 
-    printf("thread: name=%s, id=0x%08X\r\n", name, thread_id);
-
 	p_thread->id = thread_id;
 	p_thread->stack = stack;
 	if (thread) {
