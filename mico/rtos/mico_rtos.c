@@ -233,10 +233,12 @@ OSStatus mico_rtos_create_thread( mico_thread_t* thread, uint8_t priority, const
 	p_def->pthread = (os_pthread)function;
 	p_def->stacksize = stack_size;
 	p_def->tpriority = _priority_remappingp[priority];
-	
+
     thread_id = osThreadCreate(p_def, (void*)arg);
 	if (thread_id == NULL)
 		return kNoMemoryErr;
+
+    printf("thread: name=%s, id=0x%08X\r\n", name, thread_id);
 
 	p_thread->id = thread_id;
 	p_thread->stack = stack;
@@ -493,10 +495,7 @@ OSStatus mico_rtos_lock_mutex( mico_mutex_t* mutex )
 		return kParamErr;
 	p_mux = (mutex_t*)*mutex;
     ret = osMutexWait(p_mux->id, osWaitForever);
-	if (ret == -1)
-		return kGeneralErr;
-	
-	return kNoErr;
+    return cmsis_status_to_mico_status(ret);
 }
 
 
@@ -679,7 +678,7 @@ OSStatus mico_rtos_init_timer( mico_timer_t* timer, uint32_t time_ms, timer_hand
 	memset(p_timer, 0, 24);
 	timer->timer_def.timer = (void*)p_timer;
 	timer->timer_def.ptimer = (os_ptimer)function;
-	id = osTimerCreate(&timer->timer_def, osTimerPeriodic, arg); // id equal p_timer;
+	id = osTimerCreate(&timer->timer_def, osTimerOnce, arg); // id equal p_timer;
 	if (id == NULL) {
 		free(p_timer);
 		return kGeneralErr;

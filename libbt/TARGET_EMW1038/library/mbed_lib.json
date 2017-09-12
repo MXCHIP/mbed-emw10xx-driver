@@ -1,0 +1,10 @@
+{
+  "name": "low_energy",
+  "config": {
+    "present": 1,
+    "build_config": 1,
+    "mico_bte_lib": 1,
+    "bluetooth_bte": 1,
+    "gatt_enable": 1
+  }
+}

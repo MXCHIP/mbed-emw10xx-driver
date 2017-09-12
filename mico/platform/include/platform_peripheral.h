@@ -22,6 +22,8 @@
 #include "stdint.h"
 #include "platform_logging.h"
 
+#include "RingBufferUtils.h"
+
 #include "device.h"
 #include "pinmap.h"
 #include "PeripheralPins.h"
@@ -30,6 +32,8 @@
 #include "gpio_irq_api.h"
 
 #include "i2c_api.h"
+
+#include "serial_api.h"
 
 
 #ifdef __cplusplus
@@ -101,7 +105,7 @@ Porting Notes
 #define UART_WAKEUP_MASK_POSN   0
 #define UART_WAKEUP_DISABLE    (0 << UART_WAKEUP_MASK_POSN) /**< UART can not wakeup MCU from stop mode */
 #define UART_WAKEUP_ENABLE     (1 << UART_WAKEUP_MASK_POSN) /**< UART can wake up MCU from stop mode */
- 
+
 /******************************************************
  *                   Enumerations
  ******************************************************/
@@ -109,8 +113,7 @@ Porting Notes
 /**
  * Pin configuration
  */
-typedef enum
-{
+typedef enum {
     INPUT_PULL_UP,             /* Input with an internal pull-up resistor - use with devices that actively drive the signal low - e.g. button connected to ground */
     INPUT_PULL_DOWN,           /* Input with an internal pull-down resistor - use with devices that actively drive the signal high - e.g. button connected to a power rail */
     INPUT_HIGH_IMPEDANCE,      /* Input - must always be driven, either actively or by an external pullup resistor */
@@ -122,18 +125,16 @@ typedef enum
 /**
  * GPIO interrupt trigger
  */
-typedef enum
-{
-    IRQ_TRIGGER_RISING_EDGE  = 0x1, /* Interrupt triggered at input signal's rising edge  */
-    IRQ_TRIGGER_FALLING_EDGE = 0x2, /* Interrupt triggered at input signal's falling edge */
-    IRQ_TRIGGER_BOTH_EDGES   = IRQ_TRIGGER_RISING_EDGE | IRQ_TRIGGER_FALLING_EDGE,
+typedef enum {
+    IRQ_TRIGGER_RISING_EDGE     = 0x1, /* Interrupt triggered at input signal's rising edge  */
+    IRQ_TRIGGER_FALLING_EDGE    = 0x2, /* Interrupt triggered at input signal's falling edge */
+    IRQ_TRIGGER_BOTH_EDGES      = IRQ_TRIGGER_RISING_EDGE | IRQ_TRIGGER_FALLING_EDGE,
 } platform_gpio_irq_trigger_t;
 
 /**
  * UART data width
  */
-typedef enum
-{
+typedef enum {
     DATA_WIDTH_5BIT,
     DATA_WIDTH_6BIT,
     DATA_WIDTH_7BIT,
@@ -144,8 +145,7 @@ typedef enum
 /**
  * UART stop bits
  */
-typedef enum
-{
+typedef enum {
     STOP_BITS_1,
     STOP_BITS_2,
 } platform_uart_stop_bits_t;
@@ -153,8 +153,7 @@ typedef enum
 /**
  * UART flow control
  */
-typedef enum
-{
+typedef enum {
     FLOW_CONTROL_DISABLED,
     FLOW_CONTROL_CTS,
     FLOW_CONTROL_RTS,
@@ -164,8 +163,7 @@ typedef enum
 /**
  * UART parity
  */
-typedef enum
-{
+typedef enum {
     NO_PARITY,
     ODD_PARITY,
     EVEN_PARITY,
@@ -174,8 +172,7 @@ typedef enum
 /**
  * I2C address width
  */
-typedef enum
-{
+typedef enum {
     I2C_ADDRESS_WIDTH_7BIT,
     I2C_ADDRESS_WIDTH_10BIT,
     I2C_ADDRESS_WIDTH_16BIT,
@@ -184,8 +181,7 @@ typedef enum
 /**
  * I2C speed mode
  */
-typedef enum
-{
+typedef enum {
     I2C_LOW_SPEED_MODE,         /* 10Khz devices */
     I2C_STANDARD_SPEED_MODE,    /* 100Khz devices */
     I2C_HIGH_SPEED_MODE         /* 400Khz devices */
@@ -194,14 +190,12 @@ typedef enum
 /**
  * SPI slave transfer direction
  */
-typedef enum
-{
+typedef enum {
     SPI_SLAVE_TRANSFER_WRITE, /* SPI master writes data to the SPI slave device */
     SPI_SLAVE_TRANSFER_READ   /* SPI master reads data from the SPI slave device */
 } platform_spi_slave_transfer_direction_t;
 
-typedef enum
-{
+typedef enum {
     SPI_SLAVE_TRANSFER_SUCCESS,             /* SPI transfer successful */
     SPI_SLAVE_TRANSFER_INVALID_COMMAND,     /* Command is invalid */
     SPI_SLAVE_TRANSFER_ADDRESS_UNAVAILABLE, /* Address specified in the command is unavailable */
@@ -213,8 +207,7 @@ typedef enum
 } platform_spi_slave_transfer_status_t;
 
 
-typedef enum
-{
+typedef enum {
     FLASH_TYPE_EMBEDDED,
     FLASH_TYPE_SPI,
     FLASH_TYPE_QSPI,
@@ -227,146 +220,150 @@ typedef enum
 /**
  * GPIO interrupt callback handler
  */
-typedef void (*platform_gpio_irq_callback_t)( void* arg );
+typedef void (*platform_gpio_irq_callback_t)(void *arg);
 
 /******************************************************
  *                    Structures
  ******************************************************/
 
 /* mbed peripherals for mico */
-typedef struct
-{
-    PinName        mbed_pin;
+typedef struct {
+    PinName mbed_pin;
 } platform_gpio_t;
 
-typedef struct
-{
-    gpio_t         gpio;
+typedef struct {
+    gpio_t gpio;
 } platform_gpio_driver_t;
 
-typedef struct
-{
-    uint32_t                        reserve;
-    gpio_t                          gpio;
-    gpio_irq_t                      gpio_irq;
-    platform_gpio_irq_callback_t    _rise;
-    void*                           arg_rise;
-    uint32_t                        reserve_gpio1;
-    uint32_t                        reserve_gpio2;
-    platform_gpio_irq_callback_t    _fall;
-    void*                           arg_fall;
+typedef struct {
+    uint32_t reserve;
+    gpio_t gpio;
+    gpio_irq_t gpio_irq;
+    platform_gpio_irq_callback_t _rise;
+    void *arg_rise;
+    uint32_t reserve_gpio1;
+    uint32_t reserve_gpio2;
+    platform_gpio_irq_callback_t _fall;
+    void *arg_fall;
 } platform_gpio_irq_driver_t;
 
-typedef struct
-{
-    PinName        mbed_sda_pin;
-    PinName        mbed_scl_pin;
+typedef struct {
+    PinName mbed_sda_pin;
+    PinName mbed_scl_pin;
 } platform_i2c_t;
 
-typedef struct
-{
-    i2c_t         i2c;
-    mico_mutex_t  i2c_mutex;
+typedef struct {
+    i2c_t i2c;
+    mico_mutex_t i2c_mutex;
 } platform_i2c_driver_t;
 
 /* peripherals only for mico */
-typedef struct
-{
-    uint32_t                   flash_type;
-    uint32_t                   flash_start_addr;
-    uint32_t                   flash_length;
-    uint32_t                   flash_protect_opt;
+typedef struct {
+    uint32_t flash_type;
+    uint32_t flash_start_addr;
+    uint32_t flash_length;
+    uint32_t flash_protect_opt;
 } platform_flash_t;
 
+typedef struct {
+    PinName mbed_tx_pin;
+    PinName mbed_rx_pin;
+    PinName mbed_rts_pin;
+    PinName mbed_cts_pin;
+} platform_uart_t;
+
+typedef struct {
+    serial_t            serial_obj;
+    ring_buffer_t      *rx_buffer;
+    mico_semaphore_t    rx_complete;
+    mico_mutex_t        tx_mutex;
+    volatile uint32_t   tx_size;
+    volatile uint32_t   rx_size;
+    volatile OSStatus   last_receive_result;
+    volatile OSStatus   last_transmit_result;
+    volatile bool       initialized;
+    bool                is_receving;
+    uint8_t             is_recv_over_flow;
+    uint8_t             FlowControl;
+} platform_uart_driver_t;
 
 #include "platform_mcu_peripheral.h" /* Include MCU-specific types */
-
-
 
 /**
  * UART configuration
  */
-typedef struct
-{
-    uint32_t                     baud_rate;
-    platform_uart_data_width_t   data_width;
-    platform_uart_parity_t       parity;
-    platform_uart_stop_bits_t    stop_bits;
-    platform_uart_flow_control_t flow_control;
-    uint8_t                      flags;          /**< if set, UART can wake up MCU from stop mode, reference: @ref UART_WAKEUP_DISABLE and @ref UART_WAKEUP_ENABLE*/
+typedef struct {
+    uint32_t                        baud_rate;
+    platform_uart_data_width_t      data_width;
+    platform_uart_parity_t          parity;
+    platform_uart_stop_bits_t       stop_bits;
+    platform_uart_flow_control_t    flow_control;
+    uint8_t                         flags;          /**< if set, UART can wake up MCU from stop mode, reference: @ref UART_WAKEUP_DISABLE and @ref UART_WAKEUP_ENABLE*/
 } platform_uart_config_t;
+
 
 /**
  * SPI configuration
  */
-typedef struct
-{
-    uint32_t               speed;
-    uint8_t                mode;
-    uint8_t                bits;
-    const platform_gpio_t* chip_select;
+typedef struct {
+    uint32_t    speed;
+    uint8_t     mode;
+    uint8_t     bits;
+    const platform_gpio_t *chip_select;
 } platform_spi_config_t;
 
 #pragma pack(1)
-typedef struct platform_spi_slave_command
-{
+typedef struct platform_spi_slave_command {
     platform_spi_slave_transfer_direction_t direction;
-    uint16_t                                address;
-    uint16_t                                data_length;
+    uint16_t address;
+    uint16_t data_length;
 } platform_spi_slave_command_t;
 
-typedef struct
-{
-    uint16_t                             data_length;
+typedef struct {
+    uint16_t data_length;
     platform_spi_slave_transfer_status_t status;
-    uint8_t                              data[1];
+    uint8_t data[1];
 } platform_spi_slave_data_buffer_t;
 
 /**
  * SPI slave configuration
  */
-typedef struct platform_spi_slave_config
-{
+typedef struct platform_spi_slave_config {
     uint32_t speed;
-    uint8_t  mode;
-    uint8_t  bits;
+    uint8_t mode;
+    uint8_t bits;
 } platform_spi_slave_config_t;
 
 #pragma pack()
 
-
-
 /**
  * SPI message segment
  */
-typedef struct
-{
-    const void* tx_buffer;
-    void*       rx_buffer;
-    uint32_t    length;
+typedef struct {
+    const void *tx_buffer;
+    void *rx_buffer;
+    uint32_t length;
 } platform_spi_message_segment_t;
 
 /**
  * I2C configuration
  */
-typedef struct
-{
-    uint16_t                         address;       /* the address of the device on the i2c bus */
+typedef struct {
+    uint16_t address;       /* the address of the device on the i2c bus */
     platform_i2c_bus_address_width_t address_width;
-    uint8_t                          flags;
-    platform_i2c_speed_mode_t        speed_mode;    /* speed mode the device operates in */
+    uint8_t flags;
+    platform_i2c_speed_mode_t speed_mode;    /* speed mode the device operates in */
 } platform_i2c_config_t;
 
 /**
  * I2C message
  */
-typedef struct
-{
-    const void*  tx_buffer;
-    void*        rx_buffer;
-    uint16_t     tx_length;
-    uint16_t     rx_length;
-    uint16_t     retries;    /* Number of times to retry the message */
+typedef struct {
+    const void *tx_buffer;
+    void *rx_buffer;
+    uint16_t tx_length;
+    uint16_t rx_length;
+    uint16_t retries;    /* Number of times to retry the message */
     bool combined;           /**< If set, this message is used for both tx and rx. */
     //uint8_t      flags;      /* MESSAGE_DISABLE_DMA : if set, this flag disables use of DMA for the message */
 } platform_i2c_message_t;
@@ -374,8 +371,7 @@ typedef struct
 /**
  * RTC time
  */
-typedef struct
-{
+typedef struct {
     uint8_t sec;
     uint8_t min;
     uint8_t hr;
@@ -385,13 +381,12 @@ typedef struct
     uint8_t year;
 } platform_rtc_time_t;
 
-typedef struct
-{
-    int32_t                    partition_owner;
-    const char*                partition_description;
-    uint32_t                   partition_start_addr;
-    uint32_t                   partition_length;
-    uint32_t                   partition_options;
+typedef struct {
+    int32_t partition_owner;
+    const char *partition_description;
+    uint32_t partition_start_addr;
+    uint32_t partition_length;
+    uint32_t partition_options;
 } platform_logic_partition_t;
 
 
@@ -408,7 +403,7 @@ typedef struct
  * performs complete reset operation
  */
 
-void platform_mcu_reset( void );
+void platform_mcu_reset(void);
 
 
 /**
@@ -419,7 +414,7 @@ void platform_mcu_reset( void );
  *
  * @return @ref OSStatus
  */
-OSStatus platform_gpio_init( platform_gpio_driver_t* driver, const platform_gpio_t* gpio, platform_pin_config_t config );
+OSStatus platform_gpio_init(platform_gpio_driver_t *driver, const platform_gpio_t *gpio, platform_pin_config_t config);
 
 
 /**
@@ -429,7 +424,7 @@ OSStatus platform_gpio_init( platform_gpio_driver_t* driver, const platform_gpio
  *
  * @return @ref OSStatus
  */
-OSStatus platform_gpio_deinit( platform_gpio_driver_t* driver );
+OSStatus platform_gpio_deinit(platform_gpio_driver_t *driver);
 
 
 /**
@@ -439,7 +434,7 @@ OSStatus platform_gpio_deinit( platform_gpio_driver_t* driver );
  *
  * @return @ref OSStatus
  */
-OSStatus platform_gpio_output_high( platform_gpio_driver_t* driver );
+OSStatus platform_gpio_output_high(platform_gpio_driver_t *driver);
 
 
 /**
@@ -449,7 +444,7 @@ OSStatus platform_gpio_output_high( platform_gpio_driver_t* driver );
  *
  * @return @ref OSStatus
  */
-OSStatus platform_gpio_output_low( platform_gpio_driver_t* driver );
+OSStatus platform_gpio_output_low(platform_gpio_driver_t *driver);
 
 
 /**
@@ -459,7 +454,7 @@ OSStatus platform_gpio_output_low( platform_gpio_driver_t* driver );
  *
  * @return @ref OSStatus
  */
-OSStatus platform_gpio_output_trigger( platform_gpio_driver_t* driver );
+OSStatus platform_gpio_output_trigger(platform_gpio_driver_t *driver);
 
 
 /**
@@ -469,7 +464,7 @@ OSStatus platform_gpio_output_trigger( platform_gpio_driver_t* driver );
  *
  * @return @ref OSStatus
  */
-bool platform_gpio_input_get( platform_gpio_driver_t* driver );
+bool platform_gpio_input_get(platform_gpio_driver_t *driver);
 
 
 /**
@@ -482,7 +477,8 @@ bool platform_gpio_input_get( platform_gpio_driver_t* driver );
  *
  * @return @ref OSStatus
  */
-OSStatus platform_gpio_irq_enable( platform_gpio_irq_driver_t* irq_driver, const platform_gpio_t* gpio, platform_gpio_irq_trigger_t trigger, platform_gpio_irq_callback_t handler, void* arg );
+OSStatus platform_gpio_irq_enable(platform_gpio_irq_driver_t *irq_driver, const platform_gpio_t *gpio,
+                                  platform_gpio_irq_trigger_t trigger, platform_gpio_irq_callback_t handler, void *arg);
 
 
 /**
@@ -492,7 +488,7 @@ OSStatus platform_gpio_irq_enable( platform_gpio_irq_driver_t* irq_driver, const
  *
  * @return @ref OSStatus
  */
-OSStatus platform_gpio_irq_disable( platform_gpio_irq_driver_t* irq_driver );
+OSStatus platform_gpio_irq_disable(platform_gpio_irq_driver_t *irq_driver);
 
 
 /**
@@ -500,7 +496,7 @@ OSStatus platform_gpio_irq_disable( platform_gpio_irq_driver_t* irq_driver );
  *
  * @return @ref OSStatus
  */
-OSStatus platform_mcu_powersave_enable( void );
+OSStatus platform_mcu_powersave_enable(void);
 
 
 /**
@@ -508,7 +504,7 @@ OSStatus platform_mcu_powersave_enable( void );
  *
  * @return @ref OSStatus
  */
-OSStatus platform_mcu_powersave_disable( void );
+OSStatus platform_mcu_powersave_disable(void);
 
 // /**
 //  * Enter standby mode, and wait a period to wakup
@@ -544,45 +540,46 @@ OSStatus platform_mcu_powersave_disable( void );
 // bool platform_watchdog_check_last_reset( void );
 
 
-// /**
-//  * Initialise the specified UART port
-//  *
-//  * @return @ref OSStatus
-//  */
+/**
+ * Initialise the specified UART port
+ *
+ * @return @ref OSStatus
+ */
 
-// OSStatus platform_uart_init( platform_uart_driver_t* driver, const platform_uart_t* peripheral, const platform_uart_config_t* config, ring_buffer_t* optional_ring_buffer );
-
-
-// /**
-//  * Deinitialise the specified UART port
-//  *
-//  * @return @ref OSStatus
-//  */
-// OSStatus platform_uart_deinit( platform_uart_driver_t* driver );
+OSStatus platform_uart_init(platform_uart_driver_t *driver, const platform_uart_t *peripheral,
+                            const platform_uart_config_t *config, ring_buffer_t *optional_ring_buffer);
 
 
-// /**
-//  * Transmit data over the specified UART port
-//  *
-//  * @return @ref OSStatus
-//  */
-// OSStatus platform_uart_transmit_bytes( platform_uart_driver_t* driver, const uint8_t* data_out, uint32_t size );
+/**
+ * Deinitialise the specified UART port
+ *
+ * @return @ref OSStatus
+ */
+OSStatus platform_uart_deinit(platform_uart_driver_t *driver);
 
 
-// /**
-//  * Receive data over the specified UART port
-//  *
-//  * @return @ref OSStatus
-//  */
-// OSStatus platform_uart_receive_bytes( platform_uart_driver_t* driver, uint8_t* data_in, uint32_t expected_data_size, uint32_t timeout_ms );
+/**
+ * Transmit data over the specified UART port
+ *
+ * @return @ref OSStatus
+ */
+OSStatus platform_uart_transmit_bytes(platform_uart_driver_t *driver, const uint8_t *data_out, uint32_t size);
 
 
-// /**
-//  * Get the received data length in ring buffer over the specified UART port
-//  *
-//  * @return 
-//  */
-// uint32_t platform_uart_get_length_in_buffer( platform_uart_driver_t* driver );
+/**
+ * Receive data over the specified UART port
+ *
+ * @return @ref OSStatus
+ */
+OSStatus platform_uart_receive_bytes(platform_uart_driver_t *driver, uint8_t *data_in, uint32_t expected_data_size,
+                                     uint32_t timeout_ms);
+
+/**
+ * Get the received data length in ring buffer over the specified UART port
+ *
+ * @return
+ */
+uint32_t platform_uart_get_length_in_buffer(platform_uart_driver_t *driver);
 
 // /**
 //  * Initialise the specified SPI interface
@@ -706,7 +703,7 @@ OSStatus platform_mcu_powersave_disable( void );
 //  * @param[out] output        : variable that will contain the sample output
 //  *
 //  * @return @ref OSStatus
- 
+
 // OSStatus platform_adc_take_sample( const platform_adc_t* adc, uint16_t* output );
 
 
@@ -730,7 +727,8 @@ OSStatus platform_mcu_powersave_disable( void );
   *
   * @return @ref OSStatus
   */
-OSStatus platform_i2c_init( platform_i2c_driver_t* driver, const platform_i2c_t* i2c, const platform_i2c_config_t* config );
+OSStatus
+platform_i2c_init(platform_i2c_driver_t *driver, const platform_i2c_t *i2c, const platform_i2c_config_t *config);
 
 /**
  * Deinitialise I2C interface
@@ -740,7 +738,7 @@ OSStatus platform_i2c_init( platform_i2c_driver_t* driver, const platform_i2c_t*
  *
  * @return @ref OSStatus
  */
-OSStatus platform_i2c_deinit( platform_i2c_driver_t* driver, const platform_i2c_config_t* config );
+OSStatus platform_i2c_deinit(platform_i2c_driver_t *driver, const platform_i2c_config_t *config);
 
 /**
  * Probe I2C slave device
@@ -750,7 +748,7 @@ OSStatus platform_i2c_deinit( platform_i2c_driver_t* driver, const platform_i2c_
  *
  * @return @ref OSStatus
  */
-bool platform_i2c_probe_device( platform_i2c_driver_t* driver, const platform_i2c_config_t* config, int retries );
+bool platform_i2c_probe_device(platform_i2c_driver_t *driver, const platform_i2c_config_t *config, int retries);
 
 /**
  * Initialise I2C transmit message
@@ -762,8 +760,8 @@ bool platform_i2c_probe_device( platform_i2c_driver_t* driver, const platform_i2
  *
  * @return @ref OSStatus
  */
-OSStatus platform_i2c_init_tx_message( platform_i2c_message_t* message, const void* tx_buffer,
-                                       uint16_t tx_buffer_length, uint16_t retries );
+OSStatus platform_i2c_init_tx_message(platform_i2c_message_t *message, const void *tx_buffer,
+                                      uint16_t tx_buffer_length, uint16_t retries);
 
 /**
  * Initialise I2C receive message
@@ -775,8 +773,8 @@ OSStatus platform_i2c_init_tx_message( platform_i2c_message_t* message, const vo
  *
  * @return @ref OSStatus
  */
-OSStatus platform_i2c_init_rx_message( platform_i2c_message_t* message, void* rx_buffer, uint16_t rx_buffer_length,
-                                       uint16_t retries );
+OSStatus platform_i2c_init_rx_message(platform_i2c_message_t *message, void *rx_buffer, uint16_t rx_buffer_length,
+                                      uint16_t retries);
 
 /**
  * Initialise I2C combined message
@@ -790,9 +788,9 @@ OSStatus platform_i2c_init_rx_message( platform_i2c_message_t* message, void* rx
  *
  * @return @ref OSStatus
  */
-OSStatus platform_i2c_init_combined_message( platform_i2c_message_t* message, const void* tx_buffer,
-                                             void* rx_buffer, uint16_t tx_buffer_length, uint16_t rx_buffer_length,
-                                             uint16_t retries );
+OSStatus platform_i2c_init_combined_message(platform_i2c_message_t *message, const void *tx_buffer,
+                                            void *rx_buffer, uint16_t tx_buffer_length, uint16_t rx_buffer_length,
+                                            uint16_t retries);
 
 /**
  * Transfer data via the I2C interface
@@ -804,8 +802,8 @@ OSStatus platform_i2c_init_combined_message( platform_i2c_message_t* message, co
  *
  * @return @ref OSStatus
  */
-OSStatus platform_i2c_transfer( platform_i2c_driver_t* driver, const platform_i2c_config_t* config,
-                                platform_i2c_message_t* messages, uint16_t number_of_messages );
+OSStatus platform_i2c_transfer(platform_i2c_driver_t *driver, const platform_i2c_config_t *config,
+                               platform_i2c_message_t *messages, uint16_t number_of_messages);
 
 
 // /**
@@ -915,25 +913,27 @@ OSStatus platform_i2c_transfer( platform_i2c_driver_t* driver, const platform_i2
  * Init flash driver and hardware interface
  *
  */
-OSStatus platform_flash_init( const platform_flash_t *peripheral );
+OSStatus platform_flash_init(const platform_flash_t *peripheral);
 
 /**
  * Erase flash
  *
  */
-OSStatus platform_flash_erase( const platform_flash_t *peripheral, uint32_t start_address, uint32_t end_address  );
+OSStatus platform_flash_erase(const platform_flash_t *peripheral, uint32_t start_address, uint32_t end_address);
 
 /**
  * Write flash
  *
  */
-OSStatus platform_flash_write( const platform_flash_t *peripheral, volatile uint32_t* start_address, uint8_t* data ,uint32_t length  );
+OSStatus platform_flash_write(const platform_flash_t *peripheral, volatile uint32_t *start_address, uint8_t *data,
+                              uint32_t length);
 
 /**
  * Read flash
  *
  */
-OSStatus platform_flash_read( const platform_flash_t *peripheral, volatile uint32_t* start_address, uint8_t* data ,uint32_t length  );
+OSStatus platform_flash_read(const platform_flash_t *peripheral, volatile uint32_t *start_address, uint8_t *data,
+                             uint32_t length);
 
 // /**
 //  * Flash protect operation
