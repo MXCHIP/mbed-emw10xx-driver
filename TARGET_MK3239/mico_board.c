@@ -17,6 +17,7 @@
 #include "mico.h"
 #include "mico_board.h"
 #include "platform_peripheral.h"
+#include "platform_bluetooth.h"
 #include "wlan_platform_common.h"
 #include "gpio_btn.h"
 
@@ -99,28 +100,14 @@ platform_gpio_irq_driver_t  platform_gpio_irq_drivers[MICO_GPIO_MAX];
 //   [MICO_ADC_2] = { ADC1, ADC_Channel_5, RCC_APB2Periph_ADC1, 1, (platform_gpio_t*)&platform_gpio_pins[MICO_GPIO_34] },
 // };
 
-// const platform_i2c_t platform_i2c_peripherals[] =
-// {
-//   [MICO_I2C_1] =
-//   {
-//     .port                         = I2C1,
-//     .pin_scl                      = &platform_gpio_pins[MICO_GPIO_17],
-//     .pin_sda                      = &platform_gpio_pins[MICO_GPIO_18],
-//     .peripheral_clock_reg         = RCC_APB1Periph_I2C1,
-//     .tx_dma                       = DMA1,
-//     .tx_dma_peripheral_clock      = RCC_AHB1Periph_DMA1,
-//     .tx_dma_stream                = DMA1_Stream1,
-//     .rx_dma_stream                = DMA1_Stream0,
-//     .tx_dma_stream_id             = 1,
-//     .rx_dma_stream_id             = 0,
-//     .tx_dma_channel               = DMA_Channel_0,
-//     .rx_dma_channel               = DMA_Channel_1,
-//     .gpio_af_scl                  = GPIO_AF_I2C1,
-//     .gpio_af_sda                  = GPIO_AF_I2C1
-//   },
-// };
+const platform_i2c_t platform_i2c_peripherals[] = {
+    [MICO_I2C_1] = {
+        .mbed_scl_pin = I2C_SCL,
+        .mbed_sda_pin = I2C_SDA,
+    }
+};
 
-// platform_i2c_driver_t platform_i2c_drivers[MICO_I2C_MAX];
+platform_i2c_driver_t platform_i2c_drivers[MICO_I2C_MAX];
 
 // const platform_uart_t platform_uart_peripherals[] =
 // {
@@ -284,22 +271,22 @@ const platform_logic_partition_t mico_partitions[] =
         .partition_length = 0x60000, //384k bytes
         .partition_options = PAR_OPT_READ_EN | PAR_OPT_WRITE_DIS,
     },
-    [MICO_PARTITION_PARAMETER_1] =
-    {
-        .partition_owner = MICO_FLASH_QSPI,
-        .partition_description = "PARAMETER1",
-        .partition_start_addr = 0x0,
-        .partition_length = 0x1000, // 4k bytes
-        .partition_options = PAR_OPT_READ_EN | PAR_OPT_WRITE_EN,
-    },
-    [MICO_PARTITION_PARAMETER_2] =
-    {
-        .partition_owner = MICO_FLASH_QSPI,
-        .partition_description = "PARAMETER2",
-        .partition_start_addr = 0x1000,
-        .partition_length = 0x1000, //4k bytes
-        .partition_options = PAR_OPT_READ_EN | PAR_OPT_WRITE_EN,
-    },
+//    [MICO_PARTITION_PARAMETER_1] =
+//    {
+//        .partition_owner = MICO_FLASH_QSPI,
+//        .partition_description = "PARAMETER1",
+//        .partition_start_addr = 0x0,
+//        .partition_length = 0x1000, // 4k bytes
+//        .partition_options = PAR_OPT_READ_EN | PAR_OPT_WRITE_EN,
+//    },
+//    [MICO_PARTITION_PARAMETER_2] =
+//    {
+//        .partition_owner = MICO_FLASH_QSPI,
+//        .partition_description = "PARAMETER2",
+//        .partition_start_addr = 0x1000,
+//        .partition_length = 0x1000, //4k bytes
+//        .partition_options = PAR_OPT_READ_EN | PAR_OPT_WRITE_EN,
+//    },
     [MICO_PARTITION_RF_FIRMWARE] =
     {
         .partition_owner = MICO_FLASH_QSPI,
@@ -318,12 +305,28 @@ const platform_logic_partition_t mico_partitions[] =
     },
     [MICO_PARTITION_FILESYS] =
     {
-        .partition_owner = MICO_FLASH_QSPI,
-        .partition_description = "FILESYS",
-        .partition_start_addr = 0x118000,
-        .partition_length = 0x0E8000, //928k bytes
-        .partition_options = PAR_OPT_READ_EN | PAR_OPT_WRITE_EN,
-    }
+        .partition_owner           = MICO_FLASH_QSPI,
+        .partition_description     = "FILESYS",
+        .partition_start_addr      = 0x118000,
+        .partition_length          = 0x0E0000, //896k bytes
+        .partition_options         = PAR_OPT_READ_EN | PAR_OPT_WRITE_EN,
+    },
+    [MICO_PARTITION_PARAMETER_1] =
+    {
+        .partition_owner           = MICO_FLASH_QSPI,
+        .partition_description     = "PARAMETER1",
+        .partition_start_addr      = 0x1F8000,
+        .partition_length          = 0x4000, // 16k bytes
+        .partition_options         = PAR_OPT_READ_EN | PAR_OPT_WRITE_EN,
+    },
+    [MICO_PARTITION_PARAMETER_2] =
+    {
+        .partition_owner           = MICO_FLASH_QSPI,
+        .partition_description     = "PARAMETER2",
+        .partition_start_addr      = 0x1FC000,
+        .partition_length          = 0x4000, //16k bytes
+        .partition_options         = PAR_OPT_READ_EN | PAR_OPT_WRITE_EN,
+    },
 };
 
 // #if defined ( USE_MICO_SPI_FLASH )
@@ -364,95 +367,98 @@ const platform_gpio_t wifi_sdio_pins[] =
 platform_gpio_driver_t      wifi_sdio_pin_drivers[WIFI_PIN_SDIO_MAX];
 
 
-// /* Bluetooth control pins.*/
-// static const platform_gpio_t internal_bt_control_pins[] =
-// {
-//     /* Reset pin unavailable */
-//     [MICO_BT_PIN_POWER      ] = { GPIOC,  3 },
-//     [MICO_BT_PIN_HOST_WAKE  ] = { GPIOC,  2 },
-//     [MICO_BT_PIN_DEVICE_WAKE] = { GPIOC,  1 }
-// };
+/* Bluetooth control pins.*/
+static const platform_gpio_t internal_bt_control_pins[] =
+{
+    /* Reset pin unavailable */
+    [BT_PIN_POWER      ] = { PC_3 },
+    [BT_PIN_HOST_WAKE  ] = { PC_2 },
+    [BT_PIN_DEVICE_WAKE] = { PC_1 }
+};
 
-// const platform_gpio_t* mico_bt_control_pins[] =
-// {
-//     /* Reset pin unavailable */
-//     [MICO_BT_PIN_POWER      ] = &internal_bt_control_pins[MICO_BT_PIN_POWER      ],
-//     [MICO_BT_PIN_HOST_WAKE  ] = &internal_bt_control_pins[MICO_BT_PIN_HOST_WAKE  ],
-//     [MICO_BT_PIN_DEVICE_WAKE] = &internal_bt_control_pins[MICO_BT_PIN_DEVICE_WAKE],
-//     [MICO_BT_PIN_RESET      ] = NULL,
-// };
+const platform_gpio_t* bt_control_pins[] =
+{
+    /* Reset pin unavailable */
+    [BT_PIN_POWER      ] = &internal_bt_control_pins[BT_PIN_POWER      ],
+    [BT_PIN_HOST_WAKE  ] = &internal_bt_control_pins[BT_PIN_HOST_WAKE  ],
+    [BT_PIN_DEVICE_WAKE] = &internal_bt_control_pins[BT_PIN_DEVICE_WAKE],
+    [BT_PIN_RESET      ] = NULL,
+};
 
-// /* Bluetooth UART pins.*/
-// static const platform_gpio_t internal_bt_uart_pins[] =
-// {
-//     [MICO_BT_PIN_UART_TX ] = { GPIOA,  2 },
-//     [MICO_BT_PIN_UART_RX ] = { GPIOA,  3 },
-//     [MICO_BT_PIN_UART_CTS] = { GPIOA,  0 },
-//     [MICO_BT_PIN_UART_RTS] = { GPIOA,  1 },
-// };
+platform_gpio_driver_t bt_control_pin_drivers[BT_PIN_MAX];
 
-// const platform_gpio_t* mico_bt_uart_pins[] =
-// {
-//     [MICO_BT_PIN_UART_TX ] = &internal_bt_uart_pins[MICO_BT_PIN_UART_TX ],
-//     [MICO_BT_PIN_UART_RX ] = &internal_bt_uart_pins[MICO_BT_PIN_UART_RX ],
-//     [MICO_BT_PIN_UART_CTS] = &internal_bt_uart_pins[MICO_BT_PIN_UART_CTS],
-//     [MICO_BT_PIN_UART_RTS] = &internal_bt_uart_pins[MICO_BT_PIN_UART_RTS],
-// };
+/* Bluetooth UART pins.*/
+static const platform_gpio_t internal_bt_uart_pins[] =
+{
+    [BT_PIN_UART_TX ] = { PA_2 },
+    [BT_PIN_UART_RX ] = { PA_3 },
+    [BT_PIN_UART_CTS] = { PA_0 },
+    [BT_PIN_UART_RTS] = { PA_1 },
+};
 
-// static const platform_uart_t internal_bt_uart_peripheral =
-// {
-//   .port                         = USART2,
-//   .pin_tx                       = &internal_bt_uart_pins[MICO_BT_PIN_UART_TX ],
-//   .pin_rx                       = &internal_bt_uart_pins[MICO_BT_PIN_UART_RX ],
-//   .pin_cts                      = &internal_bt_uart_pins[MICO_BT_PIN_UART_CTS ],
-//   .pin_rts                      = &internal_bt_uart_pins[MICO_BT_PIN_UART_RTS ],
-//   .tx_dma_config =
-//   {
-//     .controller                 = DMA1,
-//     .stream                     = DMA1_Stream6,
-//     .channel                    = DMA_Channel_4,
-//     .irq_vector                 = DMA1_Stream6_IRQn,
-//     .complete_flags             = DMA_HISR_TCIF6,
-//     .error_flags                = ( DMA_HISR_TEIF6 | DMA_HISR_FEIF6 ),
-//   },
-//   .rx_dma_config =
-//   {
-//     .controller                 = DMA1,
-//     .stream                     = DMA1_Stream5,
-//     .channel                    = DMA_Channel_4,
-//     .irq_vector                 = DMA1_Stream5_IRQn,
-//     .complete_flags             = DMA_HISR_TCIF5,
-//     .error_flags                = ( DMA_HISR_TEIF5 | DMA_HISR_FEIF5 | DMA_HISR_DMEIF5 ),
-//   },
-// };
+const platform_gpio_t* bt_uart_pins[] =
+{
+    [BT_PIN_UART_TX ] = &internal_bt_uart_pins[BT_PIN_UART_TX ],
+    [BT_PIN_UART_RX ] = &internal_bt_uart_pins[BT_PIN_UART_RX ],
+    [BT_PIN_UART_CTS] = &internal_bt_uart_pins[BT_PIN_UART_CTS],
+    [BT_PIN_UART_RTS] = &internal_bt_uart_pins[BT_PIN_UART_RTS],
+};
 
-// static platform_uart_driver_t internal_bt_uart_driver;
-// const platform_uart_t*        mico_bt_uart_peripheral = &internal_bt_uart_peripheral;
-// platform_uart_driver_t*       mico_bt_uart_driver     = &internal_bt_uart_driver;
+platform_gpio_driver_t bt_uart_pin_drivers[4];
 
+static const platform_uart_t internal_bt_uart_peripheral =
+{
+    .mbed_tx_pin    = PA_2,
+    .mbed_rx_pin    = PA_3,
+    .mbed_cts_pin   = PA_0,
+    .mbed_rts_pin   = PA_1,
+//    .tx_dma_config =
+//    {
+//        .controller                 = DMA1,
+//        .stream                     = DMA1_Stream6,
+//        .channel                    = DMA_Channel_4,
+//        .irq_vector                 = DMA1_Stream6_IRQn,
+//        .complete_flags             = DMA_HISR_TCIF6,
+//        .error_flags                = ( DMA_HISR_TEIF6 | DMA_HISR_FEIF6 ),
+//    },
+//    .rx_dma_config =
+//    {
+//        .controller                 = DMA1,
+//        .stream                     = DMA1_Stream5,
+//        .channel                    = DMA_Channel_4,
+//        .irq_vector                 = DMA1_Stream5_IRQn,
+//        .complete_flags             = DMA_HISR_TCIF5,
+//        .error_flags                = ( DMA_HISR_TEIF5 | DMA_HISR_FEIF5 | DMA_HISR_DMEIF5 ),
+//    },
+};
 
-// /* Bluetooth UART configuration. Used by libraries/bluetooth/internal/bus/UART/bt_bus.c */
-// const platform_uart_config_t mico_bt_uart_config =
-// {
-//     .baud_rate    = 115200,
-//     .data_width   = DATA_WIDTH_8BIT,
-//     .parity       = NO_PARITY,
-//     .stop_bits    = STOP_BITS_1,
-//     .flow_control = FLOW_CONTROL_CTS_RTS, //FLOW_CONTROL_DISABLED,
-// };
-
-// /*BT chip specific configuration information*/
-// const platform_bluetooth_config_t mico_bt_config =
-// {
-//     .patchram_download_mode      = PATCHRAM_DOWNLOAD_MODE_MINIDRV_CMD,
-//     .patchram_download_baud_rate = 115200,
-//     .featured_baud_rate          = 3000000
-// };
+static platform_uart_driver_t internal_bt_uart_driver;
+const platform_uart_t*        bt_uart_peripheral = &internal_bt_uart_peripheral;
+platform_uart_driver_t*       bt_uart_driver     = &internal_bt_uart_driver;
 
 
-// /******************************************************
-// *               Function Definitions
-// ******************************************************/
+/* Bluetooth UART configuration. Used by libraries/bluetooth/internal/bus/UART/bt_bus.c */
+platform_uart_config_t bt_uart_config =
+{
+    .baud_rate    = 115200,
+    .data_width   = DATA_WIDTH_8BIT,
+    .parity       = NO_PARITY,
+    .stop_bits    = STOP_BITS_1,
+    .flow_control = FLOW_CONTROL_CTS_RTS, //FLOW_CONTROL_DISABLED,
+};
+
+/*BT chip specific configuration information*/
+const platform_bluetooth_config_t bt_config =
+{
+    .patchram_download_mode      = PATCHRAM_DOWNLOAD_MODE_MINIDRV_CMD,
+    .patchram_download_baud_rate = 115200,
+    .featured_baud_rate          = 115200
+};
+
+
+/******************************************************
+*               Function Definitions
+******************************************************/
 void platform_init_peripheral_irq_priorities( void )
 {
     NVIC_SetPriority( RTC_WKUP_IRQn,        1 );   /* RTC Wake-up event   */
@@ -504,22 +510,40 @@ void mico_board_init( void )
 #endif
 }
 
- void MicoSysLed(bool onoff)
- {
-   if (onoff) {
-       mico_gpio_output_low( (mico_gpio_t)MICO_SYS_LED );
-   } else {
-       mico_gpio_output_high( (mico_gpio_t)MICO_SYS_LED );
-   }
- }
+void MicoSysLed(bool onoff)
+{
+    if (onoff) {
+        mico_gpio_output_low((mico_gpio_t) MICO_SYS_LED);
+    } else {
+        mico_gpio_output_high((mico_gpio_t) MICO_SYS_LED);
+    }
+}
 
- void MicoRfLed(bool onoff)
- {
-   if (onoff) {
-       mico_gpio_output_low( (mico_gpio_t)MICO_RF_LED );
-   } else {
-       mico_gpio_output_high( (mico_gpio_t)MICO_RF_LED );
-   }
- }
+void MicoRfLed(bool onoff)
+{
+    if (onoff) {
+        mico_gpio_output_low((mico_gpio_t) MICO_RF_LED);
+    } else {
+        mico_gpio_output_high((mico_gpio_t) MICO_RF_LED);
+    }
+}
 
+/**
+ * Critical Section
+ */
+static uint32_t mico_board_critical_nesting = 0;
 
+void mico_board_enter_critical( void )
+{
+    __disable_irq();
+    mico_board_critical_nesting++;
+    __DSB();
+    __ISB();
+}
+
+void mico_board_exit_critical( void )
+{
+    if (--mico_board_critical_nesting == 0) {
+        __enable_irq();
+    }
+}

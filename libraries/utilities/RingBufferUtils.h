@@ -35,6 +35,11 @@
 
 #include "mico_common.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 /** @addtogroup MICO_Middleware_Interface
   * @{
   */
@@ -145,7 +150,9 @@ OSStatus ring_buffer_read( ring_buffer_t* ring_buffer, uint8_t* data, uint32_t d
 /**
   * @}
   */
-
+#ifdef __cplusplus
+}
+#endif
 
 #endif // __RingBufferUtils_h__
 

@@ -31,11 +31,7 @@ extern "C" {
 #endif
 
 // ==== LOGGING ====
-#ifdef __GNUC__
-#define SHORT_FILE strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__
-#else
-#define SHORT_FILE strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__
-#endif
+#define SHORT_FILE (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__))
 
 #define YesOrNo(x) (x ? "YES" : "NO")
 

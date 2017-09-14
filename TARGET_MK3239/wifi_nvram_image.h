@@ -30,7 +30,7 @@ extern "C" {
  * Character array of NVRAM image
  */
 
-    static const char wifi_nvram_image[] =
+static const char wifi_nvram_image[] =
             // # The following parameter values are just placeholders, need to be updated.
             "manfid=0x2d0"                                                       "\x00"
             "prodid=0x0726"                                                      "\x00"

@@ -35,6 +35,10 @@
 
 #include "mico_common.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 /** \defgroup MICO_Algorithm_APIs MICO Algorithm APIs
   * @brief Provide commonly used Algorithm APIs
@@ -164,6 +168,11 @@ void CRC16_Final( CRC16_Context*inContext, uint16_t *outResult );
 /**
   * @}
   */
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif //__CheckSumUtils_h__
 
 

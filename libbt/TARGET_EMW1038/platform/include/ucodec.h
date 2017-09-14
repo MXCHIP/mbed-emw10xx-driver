@@ -21,7 +21,6 @@
 #ifndef UCODEC_H
 #define UCODEC_H
 
-#include "libbt/TARGET_EMW1038/low_energy/bt_target.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

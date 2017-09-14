@@ -35,6 +35,10 @@
 #include <stdarg.h>
 #include "mico_common.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 /** @addtogroup MICO_Middleware_Interface
   * @{
@@ -50,7 +54,7 @@
 /*! @defined    sizeof_string
     @abstract   Determines the size of a constant C string, excluding the null terminator.
 */
-#define sizeof_string( X )      ( sizeof( ( X ) ) - 1 )
+#define sizeof_string(X)      ( sizeof( ( X ) ) - 1 )
 
 //---------------------------------------------------------------------------------------------------------------------------
 /*! @defined    kSizeCString
@@ -82,7 +86,7 @@ unsigned int str2hex(unsigned char *ibuf, unsigned char *obuf, unsigned int olen
   *
   * @retval None
   */
-void Int2Str(uint8_t* str, int32_t intnum);
+void Int2Str(uint8_t *str, int32_t intnum);
 
 
 /**
@@ -107,7 +111,6 @@ uint32_t Str2Int(uint8_t *inputstr, int32_t *intnum);
 char *__strdup(const char *src);
 
 
-
 /**
   * @brief  Allocate a memory to store the string, and transfer '.' to '\.'
   *
@@ -118,7 +121,7 @@ char *__strdup(const char *src);
 char *__strdup_trans_dot(char *src);
 
 // ==== NETWORKING STRING UTILS ====
-#define TextToMACAddress( TEXT, SIZE, ADDR )    TextToHardwareAddress( TEXT, SIZE, 6, ADDR )
+#define TextToMACAddress(TEXT, SIZE, ADDR)    TextToHardwareAddress( TEXT, SIZE, 6, ADDR )
 
 
 /**
@@ -131,7 +134,7 @@ char *__strdup_trans_dot(char *src);
   * 
   * @retval ?
   */
-int TextToHardwareAddress( const void *inText, size_t inTextSize, size_t inAddrSize, void *outAddr );
+int TextToHardwareAddress(const void *inText, size_t inTextSize, size_t inAddrSize, void *outAddr);
 
 unsigned int str2hex(unsigned char *ibuf, unsigned char *obuf, unsigned int olen);
 
@@ -146,7 +149,7 @@ unsigned int str2hex(unsigned char *ibuf, unsigned char *obuf, unsigned int olen
   * 
   * @retval ?
   */
-char* DataToCString( const uint8_t *inBuf, size_t inBufLen );
+char *DataToCString(const uint8_t *inBuf, size_t inBufLen);
 
 
 /**
@@ -157,7 +160,7 @@ char* DataToCString( const uint8_t *inBuf, size_t inBufLen );
   * 
   * @retval ?
   */
-char* DataToHexString( const uint8_t *inBuf, size_t inBufLen );
+char *DataToHexString(const uint8_t *inBuf, size_t inBufLen);
 
 
 /**
@@ -168,7 +171,7 @@ char* DataToHexString( const uint8_t *inBuf, size_t inBufLen );
   * 
   * @retval ?
   */
-char* DataToHexStringWithSpaces( const uint8_t *inBuf, size_t inBufLen );
+char *DataToHexStringWithSpaces(const uint8_t *inBuf, size_t inBufLen);
 
 
 /**
@@ -179,7 +182,7 @@ char* DataToHexStringWithSpaces( const uint8_t *inBuf, size_t inBufLen );
   * 
   * @retval ?
   */
-char* DataToHexStringWithColons( const uint8_t *inBuf, size_t inBufLen );
+char *DataToHexStringWithColons(const uint8_t *inBuf, size_t inBufLen);
 
 // ==== STRING COMPARE UTILS ====
 /**
@@ -191,8 +194,7 @@ char* DataToHexStringWithColons( const uint8_t *inBuf, size_t inBufLen );
   * 
   * @retval ?
   */
-int strnicmp_suffix( const void *inStr, size_t inMaxLen, const char *inSuffix );
-
+int strnicmp_suffix(const void *inStr, size_t inMaxLen, const char *inSuffix);
 
 
 /**
@@ -204,7 +206,7 @@ int strnicmp_suffix( const void *inStr, size_t inMaxLen, const char *inSuffix );
   * 
   * @retval ?
   */
-int strnicmp( const char *inS1, const char *inS2, size_t inMax );
+int strnicmp(const char *inS1, const char *inS2, size_t inMax);
 
 
 /**
@@ -216,7 +218,7 @@ int strnicmp( const char *inS1, const char *inS2, size_t inMax );
   * 
   * @retval ?
   */
-int strnicmpx( const void *inS1, size_t inN, const char *inS2 );
+int strnicmpx(const void *inS1, size_t inN, const char *inS2);
 
 
 /**
@@ -228,7 +230,7 @@ int strnicmpx( const void *inS1, size_t inN, const char *inS2 );
   * 
   * @retval ?
   */
-char * strnstr_suffix( const char *inStr, size_t inMaxLen, const char *inSuffix);
+char *strnstr_suffix(const char *inStr, size_t inMaxLen, const char *inSuffix);
 
 
 /**
@@ -240,7 +242,7 @@ char * strnstr_suffix( const char *inStr, size_t inMaxLen, const char *inSuffix)
   * 
   * @retval ?
   */
-int VSNScanF( const void *inString, size_t inSize, const char *inFormat, va_list inArgs );
+int VSNScanF(const void *inString, size_t inSize, const char *inFormat, va_list inArgs);
 
 /**
   * @brief  ?
@@ -252,7 +254,7 @@ int VSNScanF( const void *inString, size_t inSize, const char *inFormat, va_list
   * 
   * @retval ?
   */
-uint8_t unsigned_to_hex_string( uint32_t value, char* output, uint8_t min_length, uint8_t max_length );
+uint8_t unsigned_to_hex_string(uint32_t value, char *output, uint8_t min_length, uint8_t max_length);
 
 /**
   * @brief  ?
@@ -264,7 +266,7 @@ uint8_t unsigned_to_hex_string( uint32_t value, char* output, uint8_t min_length
   * 
   * @retval ?
   */
-uint8_t string_to_unsigned( const char* string, uint8_t str_length, uint32_t* value_out, uint8_t is_hex );
+uint8_t string_to_unsigned(const char *string, uint8_t str_length, uint32_t *value_out, uint8_t is_hex);
 
 
 /**
@@ -279,7 +281,7 @@ uint8_t string_to_unsigned( const char* string, uint8_t str_length, uint32_t* va
   */
 void *memmem(void *start, unsigned int s_len, void *find, unsigned int f_len);
 
-uint8_t unsigned_to_decimal_string( uint32_t value, char* output, uint8_t min_length, uint8_t max_length );
+uint8_t unsigned_to_decimal_string(uint32_t value, char *output, uint8_t min_length, uint8_t max_length);
 
 #if defined (__CC_ARM)
 #define strdup __strdup
@@ -303,6 +305,9 @@ size_t strnlen(const char *s, size_t count);
   * @}
   */
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif // __StringUtils_h__
 

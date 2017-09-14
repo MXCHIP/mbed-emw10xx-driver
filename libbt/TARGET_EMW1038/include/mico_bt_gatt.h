@@ -835,7 +835,7 @@ mico_bt_gatt_status_t mico_bt_gatt_send_read (uint16_t conn_id, mico_bt_gatt_rea
  *  @return @link mico_bt_gatt_status_e mico_bt_gatt_status_t @endlink
  */
 mico_bt_gatt_status_t mico_bt_gatt_send_write (uint16_t conn_id, mico_bt_gatt_write_type_t type,
-                                              mico_bt_gatt_value_t *p_write);
+                                               mico_bt_gatt_value_t *p_write);
 
 /**
  * Function       mico_bt_gatt_send_execute_write

@@ -362,6 +362,10 @@ typedef enum
 
 void mico_board_init(void);
 
+void mico_board_enter_critical( void );
+
+void mico_board_exit_critical( void );
+
 
 #ifdef __cplusplus
 } /*extern "C" */

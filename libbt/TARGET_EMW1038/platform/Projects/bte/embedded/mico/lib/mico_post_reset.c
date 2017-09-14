@@ -6,7 +6,8 @@
 **                                                                           *
 **  Copyright (c) 2013, Broadcom Corp., All Rights Reserved.                 *
 ******************************************************************************/
-#include <mico/platform/include/platform_bluetooth.h>
+#include "platform_bluetooth.h"
+
 #include "bt_target.h"
 #include "btu.h"
 #include "brcm_api.h"
@@ -57,9 +58,14 @@ void bte_prm_cback(tBRCM_PRM_STATUS status)
     if (status == BRCM_PRM_STS_COMPLETE) {
         APPL_TRACE_ERROR0("Patch successfully downloaded. Proceding with startup...");
 #if (defined(BTE_MAIN_HCI_RECONFIG_BAUD) && (BTE_MAIN_HCI_RECONFIG_BAUD == TRUE))
-        HCIUTIL_UpdateBaudRate(USERIAL_GetBaud(bt_config.featured_baud_rate),
-                               BTE_MAIN_HCI_RECONFIG_CLOCK_RATE,
-                               bte_post_download_baud_update_cback);
+        if (bt_config.featured_baud_rate != bt_config.patchram_download_baud_rate) {
+            /* 115200 is default configuration for BCM43438A1 */
+            HCIUTIL_UpdateBaudRate(USERIAL_GetBaud(bt_config.featured_baud_rate),
+                                   BTE_MAIN_HCI_RECONFIG_CLOCK_RATE,
+                                   bte_post_download_baud_update_cback);
+        } else {
+            bte_post_download_baud_update_cback(HCIUTIL_STATUS_SUCCESS);
+        }
 #else
         BTM_ContinueReset();
 #endif

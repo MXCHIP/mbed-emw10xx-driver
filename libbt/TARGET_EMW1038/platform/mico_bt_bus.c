@@ -17,8 +17,6 @@
  **  drivers
  *******************************************************************************/
 
-
-#include <mico/platform/include/platform_peripheral.h>
 #include "mico.h"
 
 #include "platform_bluetooth.h"
@@ -52,7 +50,7 @@ do \
 { \
     while ( bt_bus_is_ready( ) == false ) \
     { \
-        mico_thread_msleep( 10 ); \
+        mico_rtos_thread_msleep( 10 ); \
     } \
 } while ( 0 )
 
@@ -109,7 +107,7 @@ int bt_bus_init(void)
                                              OUTPUT_OPEN_DRAIN_PULL_UP),
                           exit);
             require_noerr(platform_gpio_output_high(&bt_control_pin_drivers[BT_PIN_DEVICE_WAKE]), exit);
-            mico_thread_msleep(100);
+            mico_rtos_thread_msleep(100);
         }
 
         /* Configure Reg Enable pin to output. Set to HIGH */
@@ -150,12 +148,12 @@ int bt_bus_init(void)
 #ifdef  MICO_USE_BT_RESET_PIN
         /* Reset bluetooth chip. Delay momentarily. */
         require_noerr( platform_gpio_output_low( &bt_control_pins[BT_PIN_RESET] ), exit );
-        mico_thread_msleep( 10 );
+        mico_rtos_thread_msleep( 10 );
         require_noerr( platform_gpio_output_high( &bt_control_pins[BT_PIN_RESET] ), exit );
 #endif
 
         /* Wait until the Bluetooth chip stabilizes.  */
-        mico_thread_msleep(100);
+        mico_rtos_thread_msleep(100);
 
         /* Bluetooth chip is ready. Pull host's RTS low */
         if (bt_uart_config.flow_control == FLOW_CONTROL_DISABLED) {

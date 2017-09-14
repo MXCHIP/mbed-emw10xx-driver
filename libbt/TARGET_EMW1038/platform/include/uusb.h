@@ -21,7 +21,6 @@
 #ifndef UUSB_H
 #define UUSB_H
 
-#include "libbt/TARGET_EMW1038/low_energy/bt_target.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

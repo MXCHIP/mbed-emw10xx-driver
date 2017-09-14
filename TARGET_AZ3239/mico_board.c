@@ -14,13 +14,9 @@
  * limitations under the License.
  */
 
-#include <mico/platform/include/platform_peripheral.h>
 #include "mico.h"
-#include "mico_board.h"
-#include "platform_peripheral.h"
 #include "platform_bluetooth.h"
 #include "wlan_platform_common.h"
-#include "gpio_btn.h"
 
 /******************************************************
 *                      Macros
@@ -343,7 +339,7 @@ const platform_logic_partition_t mico_partitions[] =
 
 /** Wi-Fi control pins. Used by platform/MCU/wlan_platform_common.c
  */
-const platform_gpio_t wifi_control_pins[5] =
+const platform_gpio_t wifi_control_pins[] =
 {
     [WIFI_PIN_POWER      ] = { PA_9 },
     [WIFI_PIN_RESET      ] = { PA_9 },
@@ -438,7 +434,7 @@ const platform_uart_t*        bt_uart_peripheral = &internal_bt_uart_peripheral;
 platform_uart_driver_t*       bt_uart_driver     = &internal_bt_uart_driver;
 
 
- /* Bluetooth UART configuration. Used by libraries/bluetooth/internal/bus/UART/bt_bus.c */
+/* Bluetooth UART configuration. Used by libraries/bluetooth/internal/bus/UART/bt_bus.c */
 platform_uart_config_t bt_uart_config =
 {
     .baud_rate    = 115200,
@@ -453,7 +449,7 @@ const platform_bluetooth_config_t bt_config =
 {
     .patchram_download_mode      = PATCHRAM_DOWNLOAD_MODE_MINIDRV_CMD,
     .patchram_download_baud_rate = 115200,
-    .featured_baud_rate          = 921600
+    .featured_baud_rate          = 115200
 };
 
 
@@ -511,21 +507,40 @@ void mico_board_init( void )
 // #endif
 }
 
- void MicoSysLed(bool onoff)
- {
-   if (onoff) {
-       mico_gpio_output_low( (mico_gpio_t)MICO_SYS_LED );
-   } else {
-       mico_gpio_output_high( (mico_gpio_t)MICO_SYS_LED );
-   }
- }
+void MicoSysLed(bool onoff)
+{
+    if (onoff) {
+        mico_gpio_output_low((mico_gpio_t) MICO_SYS_LED);
+    } else {
+        mico_gpio_output_high((mico_gpio_t) MICO_SYS_LED);
+    }
+}
 
- void MicoRfLed(bool onoff)
- {
-   if (onoff) {
-       mico_gpio_output_low( (mico_gpio_t)MICO_RF_LED );
-   } else {
-       mico_gpio_output_high( (mico_gpio_t)MICO_RF_LED );
-   }
- }
+void MicoRfLed(bool onoff)
+{
+    if (onoff) {
+        mico_gpio_output_low((mico_gpio_t) MICO_RF_LED);
+    } else {
+        mico_gpio_output_high((mico_gpio_t) MICO_RF_LED);
+    }
+}
 
+/**
+ * Critical Section
+ */
+static uint32_t mico_board_critical_nesting = 0;
+
+void mico_board_enter_critical( void )
+{
+    __disable_irq();
+    mico_board_critical_nesting++;
+    __DSB();
+    __ISB();
+}
+
+void mico_board_exit_critical( void )
+{
+    if (--mico_board_critical_nesting == 0) {
+        __enable_irq();
+    }
+}

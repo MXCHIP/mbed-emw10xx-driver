@@ -19,6 +19,7 @@
 #include "rt_Time.h"
 
 #include "mico_rtos.h"
+#include "mico_board.h"
 
 /******************************************************
  *                      Macros
@@ -451,12 +452,12 @@ OSStatus mico_rtos_deinit_semaphore( mico_semaphore_t* semaphore )
 
 void mico_rtos_enter_critical( void )
 {
-    //vPortEnterCritical();
+    mico_board_enter_critical();
 }
 
 void mico_rtos_exit_critical( void )
 {
-    //vPortExitCritical();
+    mico_board_exit_critical();
 }
 
 
@@ -676,7 +677,7 @@ OSStatus mico_rtos_init_timer( mico_timer_t* timer, uint32_t time_ms, timer_hand
 	memset(p_timer, 0, 24);
 	timer->timer_def.timer = (void*)p_timer;
 	timer->timer_def.ptimer = (os_ptimer)function;
-	id = osTimerCreate(&timer->timer_def, osTimerOnce, arg); // id equal p_timer;
+	id = osTimerCreate(&timer->timer_def, osTimerPeriodic, arg); // id equal p_timer;
 	if (id == NULL) {
 		free(p_timer);
 		return kGeneralErr;

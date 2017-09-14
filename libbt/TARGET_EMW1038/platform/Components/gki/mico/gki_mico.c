@@ -215,14 +215,8 @@ void GKI_shutdown(void)
  *********************************************************************************/
 void gki_update_timer_cback(void *arg)
 {
-    static int cnt = 0;
-
-//    printf("%s: enter[%d]\r\n", __FUNCTION__, cnt);
-
     (void)arg;
     GKI_timer_update(100);
-    mico_rtos_start_timer(&update_tick_timer);
-//    printf("%s: exit[%d]\r\n", __FUNCTION__, cnt++);
 }
 
 /*******************************************************************************
@@ -415,55 +409,42 @@ void GKI_delay(UINT32 timeout)
  ** Returns          GKI_SUCCESS if all OK, else GKI_FAILURE
  **
  *******************************************************************************/
-static int gki_mico_line = __LINE__;
 UINT8 GKI_send_event(UINT8 task_id, UINT16 event)
 {
     OSStatus ret;
     bool empty;
     UINT32 queueData = 0;
-    gki_mico_line = __LINE__;
+
     /* use efficient coding to avoid pipeline stalls */
     if (task_id < GKI_MAX_TASKS) {
-        gki_mico_line = __LINE__;
         if (gki_cb.com.OSRdyTbl[task_id] == TASK_DEAD) {
-            gki_mico_line = __LINE__;
             GKI_TRACE_ERROR_1("GKI_send_event task %i inactive", task_id);
             return (GKI_FAILURE);
         }
 
-        gki_mico_line = __LINE__;
         /* protect OSWaitEvt[task_id] from manipulation in GKI_wait() */
         mico_rtos_lock_mutex(&gki_cb.os.thread_evt_mutex[task_id]);
-        gki_mico_line = __LINE__;
         /* Set the event bit */
         gki_cb.com.OSWaitEvt[task_id] |= event;
 
         empty = mico_rtos_is_queue_empty(&gki_cb.os.thread_evt_queue[task_id]);
         if (empty == true) {
-            gki_mico_line = __LINE__;
             ret = mico_rtos_push_to_queue(&gki_cb.os.thread_evt_queue[task_id], (void *) &event, MICO_NEVER_TIMEOUT);
         } else {
-            gki_mico_line = __LINE__;
             if ((ret = mico_rtos_pop_from_queue(&gki_cb.os.thread_evt_queue[task_id], (void *) &queueData, 0)) !=
                 kNoErr) {
-                gki_mico_line = __LINE__;
                 return (GKI_FAILURE);
             }
-            gki_mico_line = __LINE__;
             gki_cb.com.OSWaitEvt[task_id] |= (queueData & 0x0000FFFF);
             ret = mico_rtos_push_to_queue(&gki_cb.os.thread_evt_queue[task_id], (void *) &gki_cb.com.OSWaitEvt[task_id],
                                           MICO_NEVER_TIMEOUT);
-            gki_mico_line = __LINE__;
         }
-        gki_mico_line = __LINE__;
 
 //        BT_TRACE_3( TRACE_LAYER_HCI, TRACE_TYPE_DEBUG, "GKI_send_event mico_rtos_push_to_queue task_id=0x%x ret=0x%x queueData=0x%x", task_id, ret, event );
 
         mico_rtos_unlock_mutex(&gki_cb.os.thread_evt_mutex[task_id]);
-        gki_mico_line = __LINE__;
         return (GKI_SUCCESS);
     }
-    gki_mico_line = __LINE__;
     return (GKI_FAILURE);
 }
 

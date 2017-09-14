@@ -15,8 +15,6 @@
  ******************************************************************************
  */
 
-#include <mico/platform/include/platform_peripheral.h>
-#include <mico/platform/include/platform_bluetooth.h>
 #include "platform_peripheral.h"
 
 /******************************************************
@@ -302,7 +300,7 @@ void platform_uart_irq(uint32_t id, SerialIrq event)
             }
         } else {
             if (driver->FlowControl == FlowControlRTSCTS || driver->FlowControl == FlowControlRTS) {
-                serial_irq_set(&driver->serial_obj, RxIrq, 0);
+                serial_irq_set(&driver->serial_obj, RxIrq, MICO_FALSE);
                 driver->is_recv_over_flow = true;
             } else {
                 serial_getc(&driver->serial_obj);

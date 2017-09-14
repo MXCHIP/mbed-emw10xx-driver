@@ -361,8 +361,6 @@ void GKI_stop_timer(UINT8 tnum)
 ** Returns          void
 **
 *******************************************************************************/
-static int line = __LINE__;
-
 void GKI_timer_update(INT32 ticks_since_last_update)
 {
     UINT8 task_id;
@@ -375,46 +373,35 @@ void GKI_timer_update(INT32 ticks_since_last_update)
      * the timer updates need to take place (next expiration occurs)
      */
     gki_cb.com.OSTicksTilExp -= ticks_since_last_update;
-    line = __LINE__;
+
     /* Don't allow timer interrupt nesting */
     if (gki_cb.com.timer_nesting) {
-        line = __LINE__;
         return;
     }
 
     gki_cb.com.timer_nesting = 1;
-    line = __LINE__;
+
 #if (defined(GKI_DELAY_STOP_SYS_TICK) && (GKI_DELAY_STOP_SYS_TICK > 0))
     /* if inactivity delay timer is set and expired */
     if (gki_cb.com.OSTicksTilStop) {
-        line = __LINE__;
         if (gki_cb.com.OSTicksTilStop <= (UINT32) ticks_since_last_update) {
-            line = __LINE__;
             if (gki_cb.com.p_tick_cb) {
-                line = __LINE__;
                 gki_cb.com.system_tick_running = FALSE;
                 (gki_cb.com.p_tick_cb)(FALSE); /* stop system tick */
-                line = __LINE__;
             }
-            line = __LINE__;
             gki_cb.com.OSTicksTilStop = 0;      /* clear inactivity delay timer */
             gki_cb.com.timer_nesting = 0;
             return;
         } else {
-            line = __LINE__;
             gki_cb.com.OSTicksTilStop -= ticks_since_last_update;
         }
-        line = __LINE__;
     }
 #endif
-    line = __LINE__;
     /* No need to update the ticks if no timeout has occurred */
     if (gki_cb.com.OSTicksTilExp > 0) {
-        line = __LINE__;
         gki_cb.com.timer_nesting = 0;
         return;
     }
-    line = __LINE__;
     next_expiration = GKI_NO_NEW_TMRS_STARTED;
 
     /* If here then gki_cb.com.OSTicksTilExp <= 0. If negative, then increase gki_cb.com.OSNumOrigTicks
@@ -434,119 +421,81 @@ void GKI_timer_update(INT32 ticks_since_last_update)
     line = __LINE__;
     GKI_disable();
 #endif
-    line = __LINE__;
     /* Check for OS Task Timers */
     for (task_id = 0; task_id < GKI_MAX_TASKS; task_id++) {
-        line = __LINE__;
-        if (gki_cb.com.OSWaitTmr[task_id] > 0) /* If timer is running */
-        {
-            line = __LINE__;
+        if (gki_cb.com.OSWaitTmr[task_id] > 0) {
+            /* If timer is running */
             gki_cb.com.OSWaitTmr[task_id] -= gki_cb.com.OSNumOrigTicks;
             if (gki_cb.com.OSWaitTmr[task_id] <= 0) {
-                line = __LINE__;
                 /* Timer Expired */
                 gki_cb.com.OSRdyTbl[task_id] = TASK_READY;
             }
-            line = __LINE__;
         }
-        line = __LINE__;
 #if (GKI_NUM_TIMERS > 0)
         /* If any timer is running, decrement */
         if (gki_cb.com.OSTaskTmr0[task_id] > 0) {
-            line = __LINE__;
             gki_cb.com.OSTaskTmr0[task_id] -= gki_cb.com.OSNumOrigTicks;
 
             if (gki_cb.com.OSTaskTmr0[task_id] <= 0) {
-                line = __LINE__;
                 /* Reload timer and set Timer 0 Expired event mask */
                 gki_cb.com.OSTaskTmr0[task_id] = gki_cb.com.OSTaskTmr0R[task_id];
-                line = __LINE__;
 #if (defined(GKI_TIMER_UPDATES_FROM_ISR) && GKI_TIMER_UPDATES_FROM_ISR == TRUE)
-                line = __LINE__;
                 GKI_isend_event (task_id, TIMER_0_EVT_MASK);
 #else
-                line = __LINE__;
                 GKI_send_event(task_id, TIMER_0_EVT_MASK);
 #endif
-                line = __LINE__;
             }
-            line = __LINE__;
         }
-        line = __LINE__;
         /* Check to see if this timer is the next one to expire */
         if (gki_cb.com.OSTaskTmr0[task_id] > 0 && gki_cb.com.OSTaskTmr0[task_id] < next_expiration) {
-            line = __LINE__;
             next_expiration = gki_cb.com.OSTaskTmr0[task_id];
         }
 #endif
-        line = __LINE__;
 #if (GKI_NUM_TIMERS > 1)
         /* If any timer is running, decrement */
         if (gki_cb.com.OSTaskTmr1[task_id] > 0) {
-            line = __LINE__;
             gki_cb.com.OSTaskTmr1[task_id] -= gki_cb.com.OSNumOrigTicks;
-            line = __LINE__;
             if (gki_cb.com.OSTaskTmr1[task_id] <= 0) {
-                line = __LINE__;
                 /* Reload timer and set Timer 1 Expired event mask */
                 gki_cb.com.OSTaskTmr1[task_id] = gki_cb.com.OSTaskTmr1R[task_id];
-                line = __LINE__;
 #if (defined(GKI_TIMER_UPDATES_FROM_ISR) && GKI_TIMER_UPDATES_FROM_ISR == TRUE)
                 GKI_isend_event (task_id, TIMER_1_EVT_MASK);
 #else
                 GKI_send_event(task_id, TIMER_1_EVT_MASK);
 #endif
-                line = __LINE__;
             }
-            line = __LINE__;
         }
-        line = __LINE__;
 
         /* Check to see if this timer is the next one to expire */
         if (gki_cb.com.OSTaskTmr1[task_id] > 0 && gki_cb.com.OSTaskTmr1[task_id] < next_expiration) {
-            line = __LINE__;
             next_expiration = gki_cb.com.OSTaskTmr1[task_id];
-            line = __LINE__;
         }
 #endif
-        line = __LINE__;
 #if (GKI_NUM_TIMERS > 2)
         /* If any timer is running, decrement */
         if (gki_cb.com.OSTaskTmr2[task_id] > 0) {
-            line = __LINE__;
             gki_cb.com.OSTaskTmr2[task_id] -= gki_cb.com.OSNumOrigTicks;
-            line = __LINE__;
             if (gki_cb.com.OSTaskTmr2[task_id] <= 0) {
-                line = __LINE__;
                 /* Reload timer and set Timer 2 Expired event mask */
                 gki_cb.com.OSTaskTmr2[task_id] = gki_cb.com.OSTaskTmr2R[task_id];
-                line = __LINE__;
 #if (defined(GKI_TIMER_UPDATES_FROM_ISR) && GKI_TIMER_UPDATES_FROM_ISR == TRUE)
                 GKI_isend_event (task_id, TIMER_2_EVT_MASK);
 #else
                 GKI_send_event(task_id, TIMER_2_EVT_MASK);
 #endif
-                line = __LINE__;
             }
-            line = __LINE__;
         }
-        line = __LINE__;
         /* Check to see if this timer is the next one to expire */
         if (gki_cb.com.OSTaskTmr2[task_id] > 0 && gki_cb.com.OSTaskTmr2[task_id] < next_expiration) {
-            line = __LINE__;
             next_expiration = gki_cb.com.OSTaskTmr2[task_id];
         }
-        line = __LINE__;
 #endif
-        line = __LINE__;
 #if (GKI_NUM_TIMERS > 3)
         /* If any timer is running, decrement */
-       if (gki_cb.com.OSTaskTmr3[task_id] > 0)
-       {
+       if (gki_cb.com.OSTaskTmr3[task_id] > 0) {
            gki_cb.com.OSTaskTmr3[task_id] -= gki_cb.com.OSNumOrigTicks;
 
-           if (gki_cb.com.OSTaskTmr3[task_id] <= 0)
-           {
+           if (gki_cb.com.OSTaskTmr3[task_id] <= 0) {
                /* Reload timer and set Timer 3 Expired event mask */
                gki_cb.com.OSTaskTmr3[task_id] = gki_cb.com.OSTaskTmr3R[task_id];
 
@@ -559,32 +508,23 @@ void GKI_timer_update(INT32 ticks_since_last_update)
        }
 
        /* Check to see if this timer is the next one to expire */
-       if (gki_cb.com.OSTaskTmr3[task_id] > 0 && gki_cb.com.OSTaskTmr3[task_id] < next_expiration)
-       {
+       if (gki_cb.com.OSTaskTmr3[task_id] > 0 && gki_cb.com.OSTaskTmr3[task_id] < next_expiration) {
            next_expiration = gki_cb.com.OSTaskTmr3[task_id];
        }
 #endif
-        line = __LINE__;
     }
-    line = __LINE__;
 #if (defined(GKI_TIMER_LIST_NOPREEMPT) && GKI_TIMER_LIST_NOPREEMPT == TRUE)
     /* End the critical section */
     GKI_enable();
 #endif
-    line = __LINE__;
     /* Set the next timer experation value if there is one to start */
     if (next_expiration < GKI_NO_NEW_TMRS_STARTED) {
-        line = __LINE__;
         gki_cb.com.OSTicksTilExp = gki_cb.com.OSNumOrigTicks = next_expiration;
     } else {
-        line = __LINE__;
         gki_cb.com.OSTicksTilExp = gki_cb.com.OSNumOrigTicks = 0;
     }
-    line = __LINE__;
 
     gki_cb.com.timer_nesting = 0;
-
-    return;
 }
 
 
@@ -629,8 +569,6 @@ BOOLEAN GKI_timer_queue_empty(void)
 void GKI_timer_queue_register_callback(SYSTEM_TICK_CBACK *p_callback)
 {
     gki_cb.com.p_tick_cb = p_callback;
-
-    return;
 }
 
 /*******************************************************************************
@@ -650,8 +588,6 @@ void GKI_init_timer_list(TIMER_LIST_Q *p_timer_listq)
     p_timer_listq->p_first = NULL;
     p_timer_listq->p_last = NULL;
     p_timer_listq->last_ticks = 0;
-
-    return;
 }
 
 /*******************************************************************************
@@ -833,8 +769,7 @@ void GKI_add_to_timer_list(TIMER_LIST_Q *p_timer_listq, TIMER_LIST_ENT *p_tle)
             p_tle->ticks -= p_timer_listq->last_ticks;
 
             p_timer_listq->last_ticks = nr_ticks_total;
-        } else    /* This entry needs to be inserted before the last entry */
-        {
+        } else {
             /* Find the entry that the new one needs to be inserted in front of */
             p_temp = p_timer_listq->p_first;
             while (p_tle->ticks > p_temp->ticks) {
