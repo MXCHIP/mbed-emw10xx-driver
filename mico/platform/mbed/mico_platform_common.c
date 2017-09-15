@@ -64,8 +64,8 @@ extern platform_i2c_driver_t            platform_i2c_drivers[];
 // extern const platform_pwm_t             platform_pwm_peripherals[];
 // extern const platform_spi_t             platform_spi_peripherals[];
 // extern platform_spi_driver_t            platform_spi_drivers[];
-// extern const platform_uart_t            platform_uart_peripherals[];
-// extern platform_uart_driver_t           platform_uart_drivers[];
+extern const platform_uart_t            platform_uart_peripherals[];
+extern platform_uart_driver_t           platform_uart_drivers[];
 // extern WEAK platform_spi_slave_driver_t platform_spi_slave_drivers[];
 extern const platform_flash_t           platform_flash_peripherals[];
 extern platform_flash_driver_t          platform_flash_drivers[];
@@ -481,53 +481,53 @@ void MicoSystemStandBy( uint32_t secondsToWakeup )
 //   return (OSStatus) platform_spi_slave_generate_interrupt( &platform_spi_slave_drivers[spi], pulse_duration_ms );
 // }
 
-// OSStatus MicoUartInitialize( mico_uart_t uart, const mico_uart_config_t* config, ring_buffer_t* optional_rx_buffer )
-// {
-//   if ( uart >= MICO_UART_NONE )
-//     return kUnsupportedErr;
+OSStatus MicoUartInitialize(mico_uart_t uart, const mico_uart_config_t *config, ring_buffer_t *optional_rx_buffer)
+{
+    if (uart >= MICO_UART_NONE)
+        return kUnsupportedErr;
 
-// #ifndef MICO_DISABLE_STDIO
-//   /* Interface is used by STDIO. Uncomment MICO_DISABLE_STDIO to overcome this */
-//   if ( uart == STDIO_UART )
-//   {
-//     return kGeneralErr;
-//   }
-// #endif
-  
-//   return (OSStatus) platform_uart_init( &platform_uart_drivers[uart], &platform_uart_peripherals[uart], config, optional_rx_buffer );
-// }
+#ifndef MICO_DISABLE_STDIO
+    /* Interface is used by STDIO. Uncomment MICO_DISABLE_STDIO to overcome this */
+    if (uart == STDIO_UART) {
+        return kGeneralErr;
+    }
+#endif
 
-// OSStatus MicoUartFinalize( mico_uart_t uart )
-// {
-//   if ( uart >= MICO_UART_NONE )
-//     return kUnsupportedErr;
+    return (OSStatus) platform_uart_init(&platform_uart_drivers[uart], &platform_uart_peripherals[uart], config,
+                                         optional_rx_buffer);
+}
 
-//   return (OSStatus) platform_uart_deinit( &platform_uart_drivers[uart] );
-// }
+OSStatus MicoUartFinalize(mico_uart_t uart)
+{
+    if (uart >= MICO_UART_NONE)
+        return kUnsupportedErr;
 
-// OSStatus MicoUartSend( mico_uart_t uart, const void* data, uint32_t size )
-// {
-//   if ( uart >= MICO_UART_NONE )
-//     return kUnsupportedErr;
+    return (OSStatus) platform_uart_deinit(&platform_uart_drivers[uart]);
+}
 
-//   return (OSStatus) platform_uart_transmit_bytes( &platform_uart_drivers[uart], (const uint8_t*) data, size );
-// }
+OSStatus MicoUartSend(mico_uart_t uart, const void *data, uint32_t size)
+{
+    if (uart >= MICO_UART_NONE)
+        return kUnsupportedErr;
 
-// OSStatus MicoUartRecv( mico_uart_t uart, void* data, uint32_t size, uint32_t timeout )
-// {
-//   if ( uart >= MICO_UART_NONE )
-//     return kUnsupportedErr;
+    return (OSStatus) platform_uart_transmit_bytes(&platform_uart_drivers[uart], (const uint8_t *) data, size);
+}
 
-//   return (OSStatus) platform_uart_receive_bytes( &platform_uart_drivers[uart], (uint8_t*)data, size, timeout );
-// }
+OSStatus MicoUartRecv(mico_uart_t uart, void *data, uint32_t size, uint32_t timeout)
+{
+    if (uart >= MICO_UART_NONE)
+        return kUnsupportedErr;
 
-// uint32_t MicoUartGetLengthInBuffer( mico_uart_t uart )
-// {
-//   if ( uart >= MICO_UART_NONE )
-//     return 0;
-  
-//   return (OSStatus) platform_uart_get_length_in_buffer( &platform_uart_drivers[uart] );
-// }
+    return (OSStatus) platform_uart_receive_bytes(&platform_uart_drivers[uart], (uint8_t *) data, size, timeout);
+}
+
+uint32_t MicoUartGetLengthInBuffer(mico_uart_t uart)
+{
+    if (uart >= MICO_UART_NONE)
+        return 0;
+
+    return (OSStatus) platform_uart_get_length_in_buffer(&platform_uart_drivers[uart]);
+}
 
 // OSStatus MicoRandomNumberRead( void *inBuffer, int inByteCount )
 // {

@@ -109,62 +109,21 @@ const platform_i2c_t platform_i2c_peripherals[] = {
 
 platform_i2c_driver_t platform_i2c_drivers[MICO_I2C_MAX];
 
-// const platform_uart_t platform_uart_peripherals[] =
-// {
-//   [MICO_UART_1] =
-//   {
-//     .port                         = USART6,
-//     .pin_tx                       = &platform_gpio_pins[MICO_GPIO_8],
-//     .pin_rx                       = &platform_gpio_pins[MICO_GPIO_12],
-//     .pin_cts                      = NULL,
-//     .pin_rts                      = NULL,
-//     .tx_dma_config =
-//     {
-//       .controller                 = DMA2,
-//       .stream                     = DMA2_Stream6,
-//       .channel                    = DMA_Channel_5,
-//       .irq_vector                 = DMA2_Stream6_IRQn,
-//       .complete_flags             = DMA_HISR_TCIF6,
-//       .error_flags                = ( DMA_HISR_TEIF6 | DMA_HISR_FEIF6 ),
-//     },
-//     .rx_dma_config =
-//     {
-//       .controller                 = DMA2,
-//       .stream                     = DMA2_Stream1,
-//       .channel                    = DMA_Channel_5,
-//       .irq_vector                 = DMA2_Stream1_IRQn,
-//       .complete_flags             = DMA_LISR_TCIF1,
-//       .error_flags                = ( DMA_LISR_TEIF1 | DMA_LISR_FEIF1 | DMA_LISR_DMEIF1 ),
-//     },
-//   },
-//   [MICO_UART_2] =
-//   {
-//     .port                         = USART1,
-//     .pin_tx                       = &platform_gpio_pins[MICO_GPIO_30],
-//     .pin_rx                       = &platform_gpio_pins[MICO_GPIO_29],
-//     .pin_cts                      = &platform_gpio_pins[MICO_GPIO_35],
-//     .pin_rts                      = &platform_gpio_pins[MICO_GPIO_34],
-//     .tx_dma_config =
-//     {
-//       .controller                 = DMA2,
-//       .stream                     = DMA2_Stream7,
-//       .channel                    = DMA_Channel_4,
-//       .irq_vector                 = DMA2_Stream7_IRQn,
-//       .complete_flags             = DMA_HISR_TCIF7,
-//       .error_flags                = ( DMA_HISR_TEIF7 | DMA_HISR_FEIF7 ),
-//     },
-//     .rx_dma_config =
-//     {
-//       .controller                 = DMA2,
-//       .stream                     = DMA2_Stream2,
-//       .channel                    = DMA_Channel_4,
-//       .irq_vector                 = DMA2_Stream2_IRQn,
-//       .complete_flags             = DMA_LISR_TCIF2,
-//       .error_flags                = ( DMA_LISR_TEIF2 | DMA_LISR_FEIF2 | DMA_LISR_DMEIF2 ),
-//     },
-//   },
-// };
-// platform_uart_driver_t platform_uart_drivers[MICO_UART_MAX];
+const platform_uart_t platform_uart_peripherals[] = {
+    [MICO_UART_1] = {
+        .mbed_tx_pin    = MBED_GPIO_8,
+        .mbed_rx_pin    = MBED_GPIO_12,
+        .mbed_cts_pin   = NC,
+        .mbed_rts_pin   = NC,
+    },
+    [MICO_UART_2] = {
+        .mbed_tx_pin    = MBED_GPIO_30,
+        .mbed_rx_pin    = MBED_GPIO_29,
+        .mbed_cts_pin   = MBED_GPIO_35,
+        .mbed_rts_pin   = MBED_GPIO_36,
+    },
+};
+platform_uart_driver_t platform_uart_drivers[MICO_UART_MAX];
 
 // const platform_spi_t platform_spi_peripherals[] =
 // {
@@ -525,25 +484,5 @@ void MicoRfLed(bool onoff)
         mico_gpio_output_low((mico_gpio_t) MICO_RF_LED);
     } else {
         mico_gpio_output_high((mico_gpio_t) MICO_RF_LED);
-    }
-}
-
-/**
- * Critical Section
- */
-static uint32_t mico_board_critical_nesting = 0;
-
-void mico_board_enter_critical( void )
-{
-    __disable_irq();
-    mico_board_critical_nesting++;
-    __DSB();
-    __ISB();
-}
-
-void mico_board_exit_critical( void )
-{
-    if (--mico_board_critical_nesting == 0) {
-        __enable_irq();
     }
 }

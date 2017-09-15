@@ -521,23 +521,3 @@ bool MicoShouldEnterBootloader( void )
     else
         return false;
 }
-
-/**
- * Critical Section
- */
-static uint32_t mico_board_critical_nesting = 0;
-
-void mico_board_enter_critical( void )
-{
-    __disable_irq();
-    mico_board_critical_nesting++;
-    __DSB();
-    __ISB();
-}
-
-void mico_board_exit_critical( void )
-{
-    if (--mico_board_critical_nesting == 0) {
-        __enable_irq();
-    }
-}

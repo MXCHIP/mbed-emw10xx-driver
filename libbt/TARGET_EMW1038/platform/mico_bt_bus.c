@@ -144,6 +144,7 @@ int bt_bus_init(void)
 
         /* Configure USART comms */
         require_noerr(platform_uart_init(bt_uart_driver, bt_uart_peripheral, &bt_uart_config, &rx_ring_buffer), exit);
+//        require_noerr(platform_uart_init(bt_uart_driver, bt_uart_peripheral, &bt_uart_config, NULL), exit);
 
 #ifdef  MICO_USE_BT_RESET_PIN
         /* Reset bluetooth chip. Delay momentarily. */

@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
+#include "mbed_critical.h"
+
 #include "rt_TypeDef.h"
 #include "rt_System.h"
 #include "rt_Time.h"
 
 #include "mico_rtos.h"
-#include "mico_board.h"
 
 /******************************************************
  *                      Macros
@@ -452,12 +453,12 @@ OSStatus mico_rtos_deinit_semaphore( mico_semaphore_t* semaphore )
 
 void mico_rtos_enter_critical( void )
 {
-    mico_board_enter_critical();
+    core_util_critical_section_enter();
 }
 
 void mico_rtos_exit_critical( void )
 {
-    mico_board_exit_critical();
+    core_util_critical_section_exit();
 }
 
 

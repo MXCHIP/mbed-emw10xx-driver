@@ -78,8 +78,6 @@ OSStatus platform_uart_init(platform_uart_driver_t *driver, const platform_uart_
     mico_rtos_init_semaphore(&driver->rx_complete, 1);
     mico_rtos_init_mutex(&driver->tx_mutex);
 
-    serial_init(&(driver->serial_obj), peripheral->mbed_tx_pin, peripheral->mbed_rx_pin);
-
     switch (config->data_width) {
         case DATA_WIDTH_7BIT  :
             wordlen = 7;
@@ -138,6 +136,7 @@ OSStatus platform_uart_init(platform_uart_driver_t *driver, const platform_uart_
             err = kParamErr;
             goto exit;
     }
+    serial_init(&(driver->serial_obj), peripheral->mbed_tx_pin, peripheral->mbed_rx_pin);
     serial_baud(&driver->serial_obj, config->baud_rate);
     serial_format(&driver->serial_obj, wordlen, parity, stopbit);
 #if DEVICE_SERIAL_FC
@@ -155,10 +154,10 @@ OSStatus platform_uart_init(platform_uart_driver_t *driver, const platform_uart_
         driver->rx_size = 0;
         /* Enable and set IRQ Handler to start receiving data from UART immediately. */
         serial_irq_handler(&driver->serial_obj, platform_uart_irq, (uint32_t) driver);
-        serial_irq_set(&driver->serial_obj, RxIrq, 1);
+        serial_irq_set(&driver->serial_obj, RxIrq, MICO_TRUE);
     } else {
         /* Receiving data from UART by calling receive_bytes() */
-        return kOptionErr;
+        return kNoErr;
     }
 exit:
     platform_mcu_powersave_enable();
@@ -315,14 +314,15 @@ void platform_uart_rx_event_handelr(void)
     if (uart_async_driver == NULL) return;
 
     int event = serial_irq_handler_asynch(&uart_async_driver->serial_obj);
-    int rx_event = event & SERIAL_EVENT_RX_MASK;
-
-    if (rx_event & SERIAL_EVENT_RX_COMPLETE) {
-        uart_async_driver->last_receive_result = kNoErr;
-    } else {
-        uart_async_driver->last_receive_result = kOverrunErr;
+    int rx_event = event & SERIAL_EVENT_RX_ALL;
+    if (rx_event) {
+        if (rx_event & SERIAL_EVENT_RX_COMPLETE) {
+            uart_async_driver->last_receive_result = kNoErr;
+        } else {
+            uart_async_driver->last_receive_result = kOverrunErr;
+        }
+        mico_rtos_set_semaphore(&uart_async_driver->rx_complete);
     }
-    mico_rtos_set_semaphore(&uart_async_driver->rx_complete);
 }
 
 /* Receive data form UART without local ring buffer */
@@ -341,6 +341,7 @@ static OSStatus receive_bytes(platform_uart_driver_t *driver, void *data, uint32
     OSStatus err = mico_rtos_get_semaphore(&driver->rx_complete, timeout);
     if (err != kNoErr) {
         serial_rx_abort_asynch(&driver->serial_obj);
+    } else {
         err = driver->last_receive_result;
     }
     uart_async_driver = NULL;
@@ -353,7 +354,16 @@ static OSStatus serial_send_stream(serial_t *serial_obj, const uint8_t *data_out
     OSStatus err = kNoErr;
 
     for (uint32_t i = 0; i < size; i++) {
+        /* Must check writeable to avoid current thread trapped into an infinite loop. */
         serial_putc(serial_obj, *(data_out + i));
+//        while (true) {
+//            if (serial_writable(serial_obj)) {
+//                serial_putc(serial_obj, *(data_out + i));
+//                break;
+//            } else {
+//                mico_rtos_delay_milliseconds(50);
+//            }
+//        }
     }
 
     return err;

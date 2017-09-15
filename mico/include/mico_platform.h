@@ -39,6 +39,7 @@ extern "C" {
 
 #include "mico_driver_gpio.h"
 #include "mico_driver_i2c.h"
+#include "mico_driver_uart.h"
 // #include "MiCODrivers/MiCODriverSpi.h"
 // #include "MiCODrivers/MiCODriverUart.h"
 // #include "MiCODrivers/MiCODriverGpio.h"

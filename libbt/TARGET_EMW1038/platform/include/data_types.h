@@ -40,11 +40,11 @@ typedef UINT32          TIME_STAMP;
 
 typedef unsigned char   UBYTE;
 
-#ifdef __arm
-#define PACKED  __packed
-#define INLINE  __inline
-#else
+#ifndef PACKED
 #define PACKED
+#endif
+
+#ifndef INLINE
 #define INLINE
 #endif
 
