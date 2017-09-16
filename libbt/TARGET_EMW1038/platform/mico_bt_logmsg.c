@@ -29,8 +29,9 @@ mico_mutex_t stdio_tx_mutex;
 
 static void printlog(char *M, char *N)
 {
-    if (mico_debug_enabled == 0)
+    if (mico_debug_enabled == 0) {
         return;
+    }
     mico_rtos_lock_mutex(&stdio_tx_mutex);
     printf("[%u][%s] %s\r\n", mico_rtos_get_time(), M, N);
     mico_rtos_unlock_mutex(&stdio_tx_mutex);
@@ -49,15 +50,12 @@ void WPRINT_BT_APP_INFO(const char *info, ...)
 
 #if BT_USE_TRACES == TRUE
 
-//extern mico_mutex_t global_trace_mutex;
-
 UINT8 mico_log_enabled = 1;
 
 void
 LogMsg(UINT32 trace_set_mask, const char *fmt_str, ...)
 {
     char buffer[256]; // Save stack space - make global
-//    char timeBuf[16];
     va_list ap;
 
     if ((!mico_log_enabled) && (TRACE_GET_TYPE(trace_set_mask) != TRACE_TYPE_ERROR))
@@ -72,7 +70,6 @@ LogMsg(UINT32 trace_set_mask, const char *fmt_str, ...)
     va_end(ap);
 
     printlog("BTLOG",  buffer);
-    //printf("[btlog] %s\r\n",  buffer);
 }
 
 void

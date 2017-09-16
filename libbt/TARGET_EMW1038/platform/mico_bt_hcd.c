@@ -16,19 +16,14 @@
 static uint32_t image_size = 0x0;
 void get_one_command(char * out, int offset)
 {
-    //uint32_t size = 0;
     uint16_t len = 0;
-
-    //resource_read(&bt_patchram_image, offset + 2, 2, &size, &len);
-    //len &= 0x0ff;
-    //resource_read(&bt_patchram_image, offset, len + 3, &size, out);
-    //uint32_t buffer_size;
 
     volatile uint32_t read_address = offset+2;
     mico_logic_partition_t *driver_partition = MicoFlashGetInfo( MICO_PARTITION_BT_FIRMWARE );
 
-    if( image_size == 0)
-      image_size = driver_partition->partition_length;
+    if(image_size == 0) {
+        image_size = driver_partition->partition_length;
+    }
 
     MicoFlashRead( MICO_PARTITION_BT_FIRMWARE, &read_address, (uint8_t *)&len, 1);
     len = len&0x00ff;

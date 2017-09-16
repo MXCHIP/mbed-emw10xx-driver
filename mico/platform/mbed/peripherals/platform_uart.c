@@ -46,7 +46,7 @@ static platform_uart_driver_t *uart_async_driver = NULL;
 /* Interrupt service functions - called from interrupt vector table */
 void platform_uart_irq(uint32_t id, SerialIrq event);
 
-static OSStatus serial_send_stream(serial_t *serial_obj, const uint8_t *data_out, uint32_t size);
+static OSStatus transmit_bytes(platform_uart_driver_t *driver, const void *data, uint32_t size, uint32_t timeout);
 
 static OSStatus receive_bytes(platform_uart_driver_t *driver, void *data, uint32_t size, uint32_t timeout);
 
@@ -73,6 +73,7 @@ OSStatus platform_uart_init(platform_uart_driver_t *driver, const platform_uart_
     driver->last_receive_result = kNoErr;
     driver->is_recv_over_flow = false;
     driver->is_receving = false;
+    driver->is_transmitting = false;
     driver->FlowControl = FlowControlNone;
 
     mico_rtos_init_semaphore(&driver->rx_complete, 1);
@@ -193,22 +194,19 @@ exit:
 OSStatus platform_uart_transmit_bytes(platform_uart_driver_t *driver, const uint8_t *data_out, uint32_t size)
 {
     OSStatus err = kNoErr;
-    int32_t ret;
-
 
     platform_mcu_powersave_disable();
 
     mico_rtos_lock_mutex(&driver->tx_mutex);
+    require_action_quiet(!driver->is_transmitting, exit, err = kInProgressErr);
+    driver->is_transmitting = true;
+    mico_rtos_unlock_mutex(&driver->tx_mutex);
 
     /* Send data to UART (blocking call...) */
-    ret = serial_send_stream(&driver->serial_obj, data_out, size);
-    if (ret != 0) {
-        err = kGeneralErr;
-        goto exit;
-    }
+    err = transmit_bytes(driver, data_out, size, MICO_WAIT_FOREVER);
 
-    driver->tx_size = 0;
-    err = driver->last_transmit_result;
+    mico_rtos_lock_mutex(&driver->tx_mutex);
+    driver->is_transmitting = false;
 
 exit:
     mico_rtos_unlock_mutex(&driver->tx_mutex);
@@ -309,16 +307,30 @@ void platform_uart_irq(uint32_t id, SerialIrq event)
 }
 
 /* Handle for asynchronous RX transfer event and used with @receive_bytes.  */
-void platform_uart_rx_event_handelr(void)
+static void platform_uart_event_handler(void)
 {
     if (uart_async_driver == NULL) return;
 
     int event = serial_irq_handler_asynch(&uart_async_driver->serial_obj);
-    int rx_event = event & SERIAL_EVENT_RX_ALL;
+    int rx_event = event & SERIAL_EVENT_RX_MASK;
+
     if (rx_event) {
         if (rx_event & SERIAL_EVENT_RX_COMPLETE) {
+            // printf("%s: SERIAL_EVENT_RX_COMPLETE\r\n", __FUNCTION__);
             uart_async_driver->last_receive_result = kNoErr;
         } else {
+            if (rx_event & SERIAL_EVENT_RX_OVERRUN_ERROR) {
+                printf("rx_event: RX_OVERRUN_ERROR\r\n");
+            }
+            if (rx_event & SERIAL_EVENT_RX_FRAMING_ERROR) {
+                printf("rx_event: RX_FRAMING_ERROR\r\n");
+            }
+            if (rx_event & SERIAL_EVENT_RX_PARITY_ERROR) {
+                printf("rx_event: RX_PARITY_ERROR\r\n");
+            }
+            if (rx_event & SERIAL_EVENT_RX_OVERFLOW) {
+                printf("rx_event: RX_OVERFLOW\r\n");
+            }
             uart_async_driver->last_receive_result = kOverrunErr;
         }
         mico_rtos_set_semaphore(&uart_async_driver->rx_complete);
@@ -330,16 +342,21 @@ static OSStatus receive_bytes(platform_uart_driver_t *driver, void *data, uint32
 {
     uint32_t rx_event = SERIAL_EVENT_RX_ALL & (~SERIAL_EVENT_RX_CHARACTER_MATCH);
 
+    if (serial_rx_active(&driver->serial_obj)) {
+        return kInProgressErr;
+    }
+
     /* Start to receive data. */
     uart_async_driver = driver;
     serial_rx_asynch(&driver->serial_obj, data, size, 8,
-                     (uint32_t) platform_uart_rx_event_handelr,
+                     (uint32_t) platform_uart_event_handler,
                      rx_event,
                      SERIAL_RESERVED_CHAR_MATCH,
                      DMA_USAGE_NEVER);
 
     OSStatus err = mico_rtos_get_semaphore(&driver->rx_complete, timeout);
     if (err != kNoErr) {
+        printf("%s: get semaphore failed: %d\r\n", __FUNCTION__, err);
         serial_rx_abort_asynch(&driver->serial_obj);
     } else {
         err = driver->last_receive_result;
@@ -349,22 +366,11 @@ static OSStatus receive_bytes(platform_uart_driver_t *driver, void *data, uint32
 }
 
 /* Send a stream packet to UART by blocking call. */
-static OSStatus serial_send_stream(serial_t *serial_obj, const uint8_t *data_out, uint32_t size)
+static OSStatus transmit_bytes(platform_uart_driver_t *driver, const void *data, uint32_t size, uint32_t timeout)
 {
-    OSStatus err = kNoErr;
-
     for (uint32_t i = 0; i < size; i++) {
-        /* Must check writeable to avoid current thread trapped into an infinite loop. */
-        serial_putc(serial_obj, *(data_out + i));
-//        while (true) {
-//            if (serial_writable(serial_obj)) {
-//                serial_putc(serial_obj, *(data_out + i));
-//                break;
-//            } else {
-//                mico_rtos_delay_milliseconds(50);
-//            }
-//        }
+        serial_putc(&driver->serial_obj, *((const uint8_t *)data + i));
     }
 
-    return err;
+    return kNoErr;
 }
