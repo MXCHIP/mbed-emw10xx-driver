@@ -73,6 +73,7 @@ OSStatus platform_uart_init(platform_uart_driver_t *driver, const platform_uart_
     driver->last_receive_result = kNoErr;
     driver->is_recv_over_flow = false;
     driver->is_receving = false;
+    driver->is_transmitting = false;
     driver->FlowControl = FlowControlNone;
 
     mico_rtos_init_semaphore(&driver->rx_complete, 1);
@@ -184,6 +185,7 @@ OSStatus platform_uart_deinit(platform_uart_driver_t *driver)
     driver->FlowControl = FlowControlNone;
     driver->is_recv_over_flow = false;
     driver->is_receving = false;
+    driver->is_transmitting = false;
 
 exit:
     platform_mcu_powersave_enable();
@@ -197,10 +199,17 @@ OSStatus platform_uart_transmit_bytes(platform_uart_driver_t *driver, const uint
     platform_mcu_powersave_disable();
 
     mico_rtos_lock_mutex(&driver->tx_mutex);
+    require_action(!driver->is_transmitting, exit, err = kInProgressErr);
+    driver->is_transmitting = true;
+    mico_rtos_unlock_mutex(&driver->tx_mutex);
 
     /* Send data to UART (blocking call...) */
     err = transmit_bytes(driver, data_out, size, MICO_WAIT_FOREVER);
 
+    mico_rtos_lock_mutex(&driver->tx_mutex);
+    driver->is_transmitting = false;
+
+exit:
     mico_rtos_unlock_mutex(&driver->tx_mutex);
     platform_mcu_powersave_enable();
     return err;

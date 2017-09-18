@@ -26,7 +26,7 @@
 
 
 /* Macro for checking of bus is initialised */
-#define IS_BUS_INITIALISED( ) \
+#define IS_BUS_INITIALISED() \
 do \
 { \
     if ( bus_initialised == false ) \
@@ -37,7 +37,7 @@ do \
 }while ( 0 )
 
 /* Macro for checking if bus is ready */
-#define BT_BUS_IS_READY( ) \
+#define BT_BUS_IS_READY() \
 do \
 { \
     if ( bt_bus_is_ready( ) == false ) \
@@ -48,7 +48,7 @@ do \
 }while ( 0 )
 
 /* Macro for waiting until bus is ready */
-#define BT_BUS_WAIT_UNTIL_READY( ) \
+#define BT_BUS_WAIT_UNTIL_READY() \
 do \
 { \
     while ( bt_bus_is_ready( ) == false ) \
@@ -58,13 +58,20 @@ do \
 } while ( 0 )
 
 /* TODO: bring in bt_bus code to remove BTE dependency on wiced bluetooth library */
-extern int bt_bus_init( void );
-extern int bt_bus_deinit( void );
-extern int bt_bus_transmit( const uint8_t* data_out, uint32_t size );
-extern int bt_bus_receive( uint8_t* data_in, uint32_t size, uint32_t timeout_ms );
-extern int bt_bus_uart_reset( void );
+extern int bt_bus_init(void);
+
+extern int bt_bus_deinit(void);
+
+extern int bt_bus_transmit(const uint8_t *data_out, uint32_t size);
+
+extern int bt_bus_receive(uint8_t *data_in, uint32_t size, uint32_t timeout_ms);
+
+extern int bt_bus_uart_reset(void);
+
 extern int bt_bus_uart_reconifig_baud(uint32_t baud);
-extern bool bt_bus_is_ready( void );
+
+extern bool bt_bus_is_ready(void);
+
 static uint32_t userial_baud_tbl[] = {
     300, /* USERIAL_BAUD_300          0 */
     600, /* USERIAL_BAUD_600          1 */
@@ -93,7 +100,7 @@ mico_thread_t read_thread_id;
 #define READ_THREAD_STACK_SIZE      0x200  //0x1000 Change by william to save ram
 #endif
 #define READ_THREAD_NAME            ((INT8 *) "READ_THREAD")
-#define READ_THREAD_PRI             5
+#define READ_THREAD_PRI             4
 //#define READ_THREAD_PRI             8   /* test: lower than player task */
 // #define READ_LIMIT               (GKI_BUF3_SIZE-BT_HDR_SIZE)
 // #define HCISU_EVT                   EVENT_MASK(APPL_EVENT_0)
@@ -106,12 +113,12 @@ mico_thread_t read_thread_id;
 BUFFER_Q Userial_in_q;
 static BT_HDR *pbuf_USERIAL_Read = NULL;
 
-void userial_read_thread( );
+static void userial_read_thread(mico_thread_arg_t arg);
+
 UINT8 g_readThreadAlive = 1;
 
 /* USERIAL control block */
-typedef struct
-{
+typedef struct {
     tUSERIAL_CBACK *p_cback;
 } tUSERIAL_CB;
 tUSERIAL_CB userial_cb;
@@ -121,30 +128,27 @@ tUSERIAL_CB userial_cb;
  ******************************************************/
 
 /* HCI Transport Layer Packet Type */
-typedef enum
-{
-    HCI_UNINITIALIZED = 0x00, // Uninitialized
-    HCI_COMMAND_PACKET = 0x01, // HCI Command packet from Host to Controller
+typedef enum {
+    HCI_UNINITIALIZED   = 0x00, // Uninitialized
+    HCI_COMMAND_PACKET  = 0x01, // HCI Command packet from Host to Controller
     HCI_ACL_DATA_PACKET = 0x02, // Bidirectional Asynchronous Connection-Less Link (ACL) data packet
     HCI_SCO_DATA_PACKET = 0x03, // Bidirectional Synchronous Connection-Oriented (SCO) link data packet
-    HCI_EVENT_PACKET = 0x04, // Events
-    HCI_LOOPBACK_MODE = 0xFF,
+    HCI_EVENT_PACKET    = 0x04, // Events
+    HCI_LOOPBACK_MODE   = 0xFF,
 // Loopback mode
 // HCI Event packet from Controller to Host
 } hci_packet_type_t;
 
-typedef struct
-{
+typedef struct {
     hci_packet_type_t packet_type; /* This is transport layer packet type. Not transmitted if transport bus is USB */
-    uint8_t event_code;
-    uint8_t content_length;
+    uint8_t           event_code;
+    uint8_t           content_length;
 } hci_event_header_t;
 
-typedef struct
-{
+typedef struct {
     hci_packet_type_t packet_type; /* This is transport layer packet type. Not transmitted if transport bus is USB */
-    uint16_t hci_handle;
-    uint16_t content_length;
+    uint16_t          hci_handle;
+    uint16_t          content_length;
 } hci_acl_packet_header_t;
 
 
@@ -159,7 +163,7 @@ typedef struct
 #endif
 
 static volatile bool bus_initialised = false;
-static volatile bool device_powered  = false;
+static volatile bool device_powered = false;
 
 /*******************************************************************************
  **
@@ -172,12 +176,13 @@ static volatile bool device_powered  = false;
  ** Returns            line speed
  **
  *******************************************************************************/
-uint32_t USERIAL_GetLineSpeed( UINT8 baud )
+uint32_t USERIAL_GetLineSpeed(UINT8 baud)
 {
-    if ( baud <= USERIAL_BAUD_4M )
-        return ( userial_baud_tbl[baud - USERIAL_BAUD_300] );
-    else
+    if (baud <= USERIAL_BAUD_4M) {
+        return (userial_baud_tbl[baud - USERIAL_BAUD_300]);
+    } else {
         return 0;
+    }
 }
 
 /*******************************************************************************
@@ -192,13 +197,13 @@ uint32_t USERIAL_GetLineSpeed( UINT8 baud )
  **
  *******************************************************************************/
 UDRV_API
-extern UINT8 USERIAL_GetBaud( uint32_t line_speed )
+extern UINT8 USERIAL_GetBaud(uint32_t line_speed)
 {
     UINT8 i;
-    for ( i = USERIAL_BAUD_300; i <= USERIAL_BAUD_4M; i++ )
-    {
-        if ( userial_baud_tbl[i - USERIAL_BAUD_300] == line_speed )
+    for (i = USERIAL_BAUD_300; i <= USERIAL_BAUD_4M; i++) {
+        if (userial_baud_tbl[i - USERIAL_BAUD_300] == line_speed) {
             return i;
+        }
     }
 
     return USERIAL_BAUD_AUTO;
@@ -216,56 +221,59 @@ extern UINT8 USERIAL_GetBaud( uint32_t line_speed )
  **
  *******************************************************************************/
 
-UDRV_API
-void USERIAL_Init( void *p_cfg )
+UDRV_API void USERIAL_Init(void *p_cfg)
 {
     DRV_TRACE_DEBUG0("USERIAL_Init");
 
     memset(&userial_cb, 0, sizeof(userial_cb));
-    GKI_init_q( &Userial_in_q );
-
-    return;
+    GKI_init_q(&Userial_in_q);
 }
 
-void USERIAL_Open_ReadThread( void )
+void USERIAL_Open_ReadThread(void)
 {
     int result;
 
     DRV_TRACE_DEBUG0("USERIAL_Open_ReadThread++");
 
     g_readThreadAlive = 1;
-    result = mico_rtos_create_thread( &read_thread_id, READ_THREAD_PRI, (const char *) READ_THREAD_NAME, userial_read_thread, READ_THREAD_STACK_SIZE, 0 );
+    result = mico_rtos_create_thread(&read_thread_id,
+                                     READ_THREAD_PRI,
+                                     (const char *) READ_THREAD_NAME,
+                                     userial_read_thread,
+                                     READ_THREAD_STACK_SIZE,
+                                     0);
 
-    if ( result != kNoErr )
-    {
-        result = mico_rtos_create_thread( &read_thread_id, READ_THREAD_PRI, (const char *) READ_THREAD_NAME, userial_read_thread, 1024, 0 );
+    if (result != kNoErr) {
+        result = mico_rtos_create_thread(&read_thread_id,
+                                         READ_THREAD_PRI,
+                                         (const char *) READ_THREAD_NAME,
+                                         userial_read_thread,
+                                         1024,
+                                         0);
     }
 
-    if ( result != kNoErr )
-    {
+    if (result != kNoErr) {
         DRV_TRACE_DEBUG0("USERIAL_Open failed to create userial_read_thread");
-        USERIAL_Close( 0 );
+        USERIAL_Close(0);
         g_readThreadAlive = 0;
         return;
     }
 }
 
-void USERIAL_Close_ReadThread( void )
+void USERIAL_Close_ReadThread(void)
 {
     // Close our read thread
     g_readThreadAlive = 0;
-    mico_rtos_delete_thread( &read_thread_id );
+    mico_rtos_delete_thread(&read_thread_id);
 
     // Flush the queue
-    do
-    {
-        pbuf_USERIAL_Read = (BT_HDR *) GKI_dequeue( &Userial_in_q );
-        if ( pbuf_USERIAL_Read )
-        {
-            GKI_freebuf( pbuf_USERIAL_Read );
+    do {
+        pbuf_USERIAL_Read = (BT_HDR *) GKI_dequeue(&Userial_in_q);
+        if (pbuf_USERIAL_Read) {
+            GKI_freebuf(pbuf_USERIAL_Read);
         }
 
-    } while ( pbuf_USERIAL_Read );
+    } while (pbuf_USERIAL_Read);
 }
 
 /*******************************************************************************
@@ -281,20 +289,19 @@ void USERIAL_Close_ReadThread( void )
  *******************************************************************************/
 
 UDRV_API
-void USERIAL_Open( tUSERIAL_PORT port, tUSERIAL_OPEN_CFG *p_cfg, tUSERIAL_CBACK *p_cback )
+void USERIAL_Open(tUSERIAL_PORT port, tUSERIAL_OPEN_CFG *p_cfg, tUSERIAL_CBACK *p_cback)
 {
     int result;
 
     DRV_TRACE_DEBUG0("USERIAL_Open");
 
-    result = bt_bus_init( );
-    if ( result != kNoErr )
-    {
+    result = bt_bus_init();
+    if (result != kNoErr) {
         DRV_TRACE_DEBUG0("USERIAL_Open failed");
         return;
     }
 
-    USERIAL_Open_ReadThread( );
+    USERIAL_Open_ReadThread();
 
     userial_cb.p_cback = p_cback;
 }
@@ -313,43 +320,39 @@ void USERIAL_Open( tUSERIAL_PORT port, tUSERIAL_OPEN_CFG *p_cfg, tUSERIAL_CBACK 
  *******************************************************************************/
 
 UDRV_API
-UINT16 USERIAL_Read( tUSERIAL_PORT port, UINT8 *p_data, UINT16 len )
+UINT16 USERIAL_Read(tUSERIAL_PORT port, UINT8 *p_data, UINT16 len)
 {
     UINT16 total_len = 0;
     UINT16 copy_len = 0;
-    UINT8 * current_packet = NULL;
+    UINT8 *current_packet = NULL;
 
-    do
-    {
-        if ( pbuf_USERIAL_Read != NULL )
-        {
-            current_packet = ( (UINT8 *) ( pbuf_USERIAL_Read + 1 ) ) + ( pbuf_USERIAL_Read->offset );
+    do {
+        if (pbuf_USERIAL_Read != NULL) {
+            current_packet = ((UINT8 *) (pbuf_USERIAL_Read + 1)) + (pbuf_USERIAL_Read->offset);
 
-            if ( ( pbuf_USERIAL_Read->len ) <= ( len - total_len ) )
+            if ((pbuf_USERIAL_Read->len) <= (len - total_len))
                 copy_len = pbuf_USERIAL_Read->len;
             else
-                copy_len = ( len - total_len );
+                copy_len = (len - total_len);
 
-            memcpy( ( p_data + total_len ), current_packet, copy_len );
+            memcpy((p_data + total_len), current_packet, copy_len);
 
             total_len += copy_len;
 
             pbuf_USERIAL_Read->offset += copy_len;
             pbuf_USERIAL_Read->len -= copy_len;
 
-            if ( pbuf_USERIAL_Read->len == 0 )
-            {
-                GKI_freebuf( pbuf_USERIAL_Read );
+            if (pbuf_USERIAL_Read->len == 0) {
+                GKI_freebuf(pbuf_USERIAL_Read);
                 pbuf_USERIAL_Read = NULL;
             }
         }
 
-        if ( pbuf_USERIAL_Read == NULL )
-        {
-            pbuf_USERIAL_Read = (BT_HDR *) GKI_dequeue( &Userial_in_q );
+        if (pbuf_USERIAL_Read == NULL) {
+            pbuf_USERIAL_Read = (BT_HDR *) GKI_dequeue(&Userial_in_q);
 //            DRV_TRACE_DEBUG1("USERIAL_Read dequeue %08x", pbuf_USERIAL_Read);
         }
-    } while ( ( pbuf_USERIAL_Read != NULL ) && ( total_len < len ) );
+    } while ((pbuf_USERIAL_Read != NULL) && (total_len < len));
 
 //    DRV_TRACE_DEBUG1("USERIAL_Read %i bytes", total_len);
 
@@ -373,7 +376,7 @@ UINT16 USERIAL_Read( tUSERIAL_PORT port, UINT8 *p_data, UINT16 len )
  **
  *******************************************************************************/
 UDRV_API
-void USERIAL_ReadBuf( tUSERIAL_PORT port, BT_HDR **p_buf )
+void USERIAL_ReadBuf(tUSERIAL_PORT port, BT_HDR **p_buf)
 {
 
 }
@@ -395,7 +398,7 @@ void USERIAL_ReadBuf( tUSERIAL_PORT port, BT_HDR **p_buf )
  **
  *******************************************************************************/
 UDRV_API
-BOOLEAN USERIAL_WriteBuf( tUSERIAL_PORT port, BT_HDR *p_buf )
+BOOLEAN USERIAL_WriteBuf(tUSERIAL_PORT port, BT_HDR *p_buf)
 {
     return FALSE;
 }
@@ -413,14 +416,13 @@ BOOLEAN USERIAL_WriteBuf( tUSERIAL_PORT port, BT_HDR *p_buf )
  **
  *******************************************************************************/
 UDRV_API
-UINT16 USERIAL_Write( tUSERIAL_PORT port, UINT8 *p_data, UINT16 len )
+UINT16 USERIAL_Write(tUSERIAL_PORT port, UINT8 *p_data, UINT16 len)
 {
     int result;
 
 //    DRV_TRACE_DEBUG1("USERIAL_Write len=%d", len);
-    result = bt_bus_transmit( p_data, len );
-    if ( result != kNoErr )
-    {
+    result = bt_bus_transmit(p_data, len);
+    if (result != kNoErr) {
         DRV_TRACE_DEBUG0("USERIAL_Write failed");
         return 0;
     }
@@ -442,11 +444,10 @@ UINT16 USERIAL_Write( tUSERIAL_PORT port, UINT8 *p_data, UINT16 len )
  *******************************************************************************/
 
 UDRV_API
-void USERIAL_Ioctl( tUSERIAL_PORT port, tUSERIAL_OP op, tUSERIAL_IOCTL_DATA *p_data )
+void USERIAL_Ioctl(tUSERIAL_PORT port, tUSERIAL_OP op, tUSERIAL_IOCTL_DATA *p_data)
 {
 
-    switch ( op )
-    {
+    switch (op) {
         case USERIAL_OP_FLUSH:
             break;
         case USERIAL_OP_FLUSH_RX:
@@ -456,9 +457,9 @@ void USERIAL_Ioctl( tUSERIAL_PORT port, tUSERIAL_OP op, tUSERIAL_IOCTL_DATA *p_d
         case USERIAL_OP_BAUD_RD:
             break;
         case USERIAL_OP_BAUD_WR:
-            USERIAL_Close_ReadThread( ); // Close read thread before de-initing UART
+            USERIAL_Close_ReadThread(); // Close read thread before de-initing UART
             bt_bus_uart_reconifig_baud(USERIAL_GetLineSpeed(p_data->baud));
-            USERIAL_Open_ReadThread( ); // Start the read thread again
+            USERIAL_Open_ReadThread(); // Start the read thread again
             break;
         default:
             break;
@@ -479,16 +480,15 @@ void USERIAL_Ioctl( tUSERIAL_PORT port, tUSERIAL_OP op, tUSERIAL_IOCTL_DATA *p_d
  **
  *******************************************************************************/
 UDRV_API
-void USERIAL_Close( tUSERIAL_PORT port )
+void USERIAL_Close(tUSERIAL_PORT port)
 {
     int result;
     DRV_TRACE_DEBUG0("USERIAL_Close");
 
-    USERIAL_Close_ReadThread( );
+    USERIAL_Close_ReadThread();
 
-    result = bt_bus_deinit( );
-    if ( result != kNoErr )
-    {
+    result = bt_bus_deinit();
+    if (result != kNoErr) {
         DRV_TRACE_DEBUG0("USERIAL_Close failed");
     }
 
@@ -507,72 +507,66 @@ void USERIAL_Close( tUSERIAL_PORT port )
  **                    FALSE if the feature is not supported
  **
  *******************************************************************************/
-UDRV_API BOOLEAN USERIAL_Feature( tUSERIAL_FEATURE feature )
+UDRV_API BOOLEAN USERIAL_Feature(tUSERIAL_FEATURE feature)
 {
     return FALSE;
 }
 
-int bt_hci_transport_driver_bus_read_handler( BT_HDR* packet )
+int bt_hci_transport_driver_bus_read_handler(BT_HDR *packet)
 {
     hci_packet_type_t packet_type = HCI_UNINITIALIZED;
     UINT8 *current_packet;
 
-    if ( packet == NULL )
-    {
+    if (packet == NULL) {
         return kGeneralErr;
     }
 
     packet->offset = 0;
     packet->layer_specific = 0;
-    current_packet = (UINT8 *) ( packet + 1 );
+    current_packet = (UINT8 *) (packet + 1);
 
     // Read 1 byte:
     //    packet_type
     // Use a timeout here so we can shutdown the thread
-    if ( bt_bus_receive( (uint8_t*) &packet_type, 1, MICO_NEVER_TIMEOUT ) != kNoErr)
-    {
+    if (bt_bus_receive((uint8_t *) &packet_type, 1, MICO_NEVER_TIMEOUT) != kNoErr) {
         DRV_TRACE_ERROR0("bt_bus error reading pkt_type");
         return kGeneralErr;
     }
 
 //    DRV_TRACE_DEBUG1("bt_hci_transport_driver_bus_read_handler packet_type=0x%x", packet_type);
 
-    switch ( packet_type )
-    {
+    switch (packet_type) {
         case HCI_LOOPBACK_MODE:
             *current_packet++ = packet_type;
 
             // Read 1 byte:
             //    content_length
-            if ( bt_bus_receive( current_packet, 1, MICO_NEVER_TIMEOUT ) != kNoErr )
-            {
+            if (bt_bus_receive(current_packet, 1, MICO_NEVER_TIMEOUT) != kNoErr) {
                 return kGeneralErr;
             }
 
             packet->len = *current_packet++;
-            DRV_TRACE_DEBUG1("HCI_LOOPBACK_MODE packet->len=0x%x", packet->len)
-            ;
+            DRV_TRACE_DEBUG1("HCI_LOOPBACK_MODE packet->len=0x%x", packet->len);
 
             // Read payload
-            if ( bt_bus_receive( current_packet, packet->len, MICO_NEVER_TIMEOUT ) != kNoErr )
-            {
+            if (bt_bus_receive(current_packet, packet->len, MICO_NEVER_TIMEOUT) != kNoErr) {
                 DRV_TRACE_DEBUG0("bt_bus_receive FAIL in bt_hci_transport_driver_bus_read_handler");
                 return kGeneralErr;
             }
 
-            packet->len = packet->len + 2; // +2 for packet type + read length
+            // +2 for packet type + read length
+            packet->len = (UINT16)(packet->len + 2);
 
             break;
 
-        case HCI_EVENT_PACKET:
-        {
+        case HCI_EVENT_PACKET: {
             hci_event_header_t header;
 
             // Read 2 bytes:
             //    event_code
             //    content_length
-            if ( bt_bus_receive( (uint8_t*) &header.event_code, sizeof( header ) - sizeof( packet_type ), MICO_NEVER_TIMEOUT ) != kNoErr )
-            {
+            if (bt_bus_receive((uint8_t *) &header.event_code, sizeof(header) - sizeof(packet_type),
+                               MICO_NEVER_TIMEOUT) != kNoErr) {
                 return kGeneralErr;
             }
 
@@ -580,26 +574,25 @@ int bt_hci_transport_driver_bus_read_handler( BT_HDR* packet )
             *current_packet++ = packet_type;
             *current_packet++ = header.event_code;
             *current_packet++ = header.content_length;
-            packet->len = header.content_length + 3; // +3 to include sizeof: packet_type=1 event_code=1 content_length=1
+            // +3 to include sizeof: packet_type=1 event_code=1 content_length=1
+            packet->len = (UINT16)(header.content_length + 3);
 
             // Read payload
-            if ( bt_bus_receive( (uint8_t*) current_packet, (uint32_t) header.content_length, MICO_NEVER_TIMEOUT ) != kNoErr )
-            {
+            if (bt_bus_receive((uint8_t *) current_packet, (uint32_t) header.content_length, MICO_NEVER_TIMEOUT) !=
+                kNoErr) {
                 return kGeneralErr;
             }
 
             break;
         }
 
-        case HCI_ACL_DATA_PACKET:
-        {
+        case HCI_ACL_DATA_PACKET: {
             hci_acl_packet_header_t header;
 
             // Read 4 bytes:
             //    hci_handle (2 bytes)
             //    content_length (2 bytes)
-            if ( bt_bus_receive( (uint8_t*) &header.hci_handle, HCI_DATA_PREAMBLE_SIZE, MICO_NEVER_TIMEOUT ) != kNoErr )
-            {
+            if (bt_bus_receive((uint8_t *) &header.hci_handle, HCI_DATA_PREAMBLE_SIZE, MICO_NEVER_TIMEOUT) != kNoErr) {
                 DRV_TRACE_ERROR0("bt_bus error acl header");
                 return kGeneralErr;
             }
@@ -609,7 +602,8 @@ int bt_hci_transport_driver_bus_read_handler( BT_HDR* packet )
             UINT16_TO_STREAM(current_packet, header.hci_handle);
             UINT16_TO_STREAM(current_packet, header.content_length);
 
-            packet->len = header.content_length + 5; // +5 to include sizeof: packet_type=1 hci_handle=2 content_length=2
+            // +5 to include sizeof: packet_type=1 hci_handle=2 content_length=2
+            packet->len = (UINT16)(header.content_length + 5);
 
 #ifdef L2CAP_REASSEMBLE
 
@@ -635,14 +629,13 @@ int bt_hci_transport_driver_bus_read_handler( BT_HDR* packet )
             }
 #endif
 
-            if (header.content_length > (HCI_ACL_POOL_BUF_SIZE - BT_HDR_SIZE))
-            {
+            if (header.content_length > (HCI_ACL_POOL_BUF_SIZE - BT_HDR_SIZE)) {
                 DRV_TRACE_ERROR1("bt_bus error invalid acl len %i", header.content_length);
                 return kGeneralErr;
             }
             // Read payload
-            if ( bt_bus_receive( (uint8_t*) current_packet, (uint32_t) header.content_length, MICO_NEVER_TIMEOUT ) != kNoErr )
-            {
+            if (bt_bus_receive((uint8_t *) current_packet, (uint32_t) header.content_length, MICO_NEVER_TIMEOUT) !=
+                kNoErr) {
                 return kGeneralErr;
             }
 
@@ -668,21 +661,18 @@ int bt_hci_transport_driver_bus_read_handler( BT_HDR* packet )
  ** Returns            None
  **
  *******************************************************************************/
-void userial_read_thread(void* arg)
+void userial_read_thread(mico_thread_arg_t arg)
 {
     BT_HDR *p_buf;
     int ret;
 
-    while ( g_readThreadAlive )
-    {
+    while (g_readThreadAlive) {
         // FIXME:TODO: Decide on the correct buffer size
 //        if ( ( p_buf = (BT_HDR *) GKI_getbuf( GKI_BUF1_SIZE /*200*/) ) != NULL )
-        if ( ( p_buf = (BT_HDR *) GKI_getbuf( HCI_ACL_POOL_BUF_SIZE) ) != NULL )
-        {
-            ret = bt_hci_transport_driver_bus_read_handler( p_buf );
-            if ( ret == kGeneralErr )
-            {
-                GKI_freebuf( p_buf );
+        if ((p_buf = (BT_HDR *) GKI_getbuf(HCI_ACL_POOL_BUF_SIZE)) != NULL) {
+            ret = bt_hci_transport_driver_bus_read_handler(p_buf);
+            if (ret == kGeneralErr) {
+                GKI_freebuf(p_buf);
                 continue;
             }
 
@@ -690,8 +680,7 @@ void userial_read_thread(void* arg)
 
 #if 0
             p = (p_buf+1);
-            if (p[0] == HCI_ACL_DATA_PACKET)
-            {
+            if (p[0] == HCI_ACL_DATA_PACKET) {
                 /* Skip over packet type */
                 p_buf->offset = 1;
                 p_buf->len -= 1;
@@ -701,16 +690,13 @@ void userial_read_thread(void* arg)
                 continue;
             }
 #endif
-            GKI_enqueue( &Userial_in_q, p_buf );
+            GKI_enqueue(&Userial_in_q, p_buf);
 
 
-            if (userial_cb.p_cback)
-            {
+            if (userial_cb.p_cback) {
                 (userial_cb.p_cback)(0, USERIAL_RX_READY_EVT, NULL);
             }
-        }
-        else
-        {
+        } else {
             GKI_delay(2000);
         }
     }
