@@ -252,8 +252,8 @@ extern "C" {
 #define THREAD_EVT_QUEUE_MSG_SIZE       4
 #define THREAD_EVT_QUEUE_NUM_MSG        10
 
-#define BT_TRACE_PROTOCOL               FALSE
 #define BT_USE_TRACES                   FALSE
+#define BT_TRACE_PROTOCOL               FALSE
 #define BT_TRACE_VERBOSE                FALSE
 
 #define USE_EXTERNAL_HCD                1

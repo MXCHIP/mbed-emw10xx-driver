@@ -88,8 +88,8 @@ static volatile bool bus_initialised = false;
 static volatile bool device_powered = false;
 
 /* RX ring buffer. Bluetooth chip UART receive can be asynchronous, therefore a ring buffer is required */
-// static ring_buffer_t rx_ring_buffer;
-// static uint8_t rx_data[USERIAL_RX_FIFO_SIZE];
+//static ring_buffer_t rx_ring_buffer;
+//static uint8_t rx_data[USERIAL_RX_FIFO_SIZE];
 
 int bt_bus_init(void)
 {
@@ -140,10 +140,10 @@ int bt_bus_init(void)
         }
 
         /* Initialise RX ring buffer */
-        // ring_buffer_init(&rx_ring_buffer, (uint8_t *) rx_data, sizeof(rx_data));
+//        ring_buffer_init(&rx_ring_buffer, (uint8_t *) rx_data, sizeof(rx_data));
 
         /* Configure USART comms */
-        // require_noerr(platform_uart_init(bt_uart_driver, bt_uart_peripheral, &bt_uart_config, &rx_ring_buffer), exit);
+//        require_noerr(platform_uart_init(bt_uart_driver, bt_uart_peripheral, &bt_uart_config, &rx_ring_buffer), exit);
         require_noerr(platform_uart_init(bt_uart_driver, bt_uart_peripheral, &bt_uart_config, NULL), exit);
 
 #ifdef  MICO_USE_BT_RESET_PIN
@@ -244,10 +244,10 @@ int bt_bus_uart_reconifig_baud(uint32_t newBaudRate)
     platform_uart_deinit(bt_uart_driver);
 
     /* Initialise RX ring buffer. */
-    // ring_buffer_init(&rx_ring_buffer, (uint8_t *)rx_data, sizeof(rx_data));
+//    ring_buffer_init(&rx_ring_buffer, (uint8_t *)rx_data, sizeof(rx_data));
 
     /* Configure UART */
-    // err = platform_uart_init(bt_uart_driver, bt_uart_peripheral, &config, &rx_ring_buffer);
+//    err = platform_uart_init(bt_uart_driver, bt_uart_peripheral, &config, &rx_ring_buffer);
     err = platform_uart_init(bt_uart_driver, bt_uart_peripheral, &config, NULL);
     if (err == kNoErr) {
         /* new baud rate value. */
