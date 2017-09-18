@@ -2239,7 +2239,7 @@ static OSStatus smartbridge_auto_conn_user_parms( void *arg )
 /* Find a valid auto connection entity by address. */
 static int8_t smartbridge_auto_conn_find_dev_by_addr(const mico_bt_device_address_t device_address)
 {
-    int idx = 0;
+    size_t idx = 0;
     mico_bt_smartbridge_socket_t *temp_socket;
 
     for (idx = 0; idx < sizeof(g_auto_conn_dev_table)/sizeof(g_auto_conn_dev_table[0]); idx++)
@@ -2259,7 +2259,7 @@ static int8_t smartbridge_auto_conn_find_dev_by_addr(const mico_bt_device_addres
 /* Allocate a free auto connection entity. */
 static int8_t smartbridge_auto_conn_dev_alloc(void)
 {
-    int idx = 0;
+    size_t idx = 0;
 
     for (idx = 0; idx < sizeof(g_auto_conn_dev_table)/sizeof(g_auto_conn_dev_table[0]); idx++)
     {

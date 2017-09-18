@@ -47,14 +47,14 @@ extern "C" {
 /* undirected connectable advertisement high/low duty cycle interval default */
 #define MICO_BT_CFG_DEFAULT_HIGH_DUTY_ADV_MIN_INTERVAL             48          /**< Tgap(adv_fast_interval1) = 30(used) ~ 60 ms  = 48 *0.625 */
 #define MICO_BT_CFG_DEFAULT_HIGH_DUTY_ADV_MAX_INTERVAL             48          /**< Tgap(adv_fast_interval1) = 30(used) ~ 60 ms  = 48 *0.625 */
-#define MICO_BT_CFG_DEFAULT_LOW_DUTY_ADV_MIN_INTERVAL              2048        /**< Tgap(adv_slow_interval) = 1.28 s= 512 * 0.625 ms */
-#define MICO_BT_CFG_DEFAULT_LOW_DUTY_ADV_MAX_INTERVAL              2048        /**< Tgap(adv_slow_interval) = 1.28 s= 512 * 0.625 ms */
+#define MICO_BT_CFG_DEFAULT_LOW_DUTY_ADV_MIN_INTERVAL              1024        /**< Tgap(adv_slow_interval) = 1.28 s= 512 * 0.625 ms */
+#define MICO_BT_CFG_DEFAULT_LOW_DUTY_ADV_MAX_INTERVAL              1024        /**< Tgap(adv_slow_interval) = 1.28 s= 512 * 0.625 ms */
 
 /* non-connectable advertisement high/low duty cycle advertisement interval default */
 #define MICO_BT_CFG_DEFAULT_HIGH_DUTY_NONCONN_ADV_MIN_INTERVAL     160         /**< Tgap(adv_fast_interval2) = 100(used) ~ 150 ms = 160 * 0.625 ms */
 #define MICO_BT_CFG_DEFAULT_HIGH_DUTY_NONCONN_ADV_MAX_INTERVAL     160         /**< Tgap(adv_fast_interval2) = 100(used) ~ 150 ms = 160 * 0.625 ms */
-#define MICO_BT_CFG_DEFAULT_LOW_DUTY_NONCONN_ADV_MIN_INTERVAL      2048        /**< Tgap(adv_slow_interval) = 1.28 s= 512 * 0.625 ms */
-#define MICO_BT_CFG_DEFAULT_LOW_DUTY_NONCONN_ADV_MAX_INTERVAL      2048        /**< Tgap(adv_slow_interval) = 1.28 s= 512 * 0.625 ms */
+#define MICO_BT_CFG_DEFAULT_LOW_DUTY_NONCONN_ADV_MIN_INTERVAL      1024        /**< Tgap(adv_slow_interval) = 1.28 s= 512 * 0.625 ms */
+#define MICO_BT_CFG_DEFAULT_LOW_DUTY_NONCONN_ADV_MAX_INTERVAL      1024        /**< Tgap(adv_slow_interval) = 1.28 s= 512 * 0.625 ms */
 
 /* directed connectable advertisement high/low duty cycle interval default */
 #define MICO_BT_CFG_DEFAULT_HIGH_DUTY_DIRECTED_ADV_MIN_INTERVAL    400        /**< Tgap(dir_conn_adv_int_max) = 250 ms = 400 * 0.625 ms */
