@@ -23,7 +23,13 @@
 #include "btm_cfg.h"
 #include "bte.h"
 
-
+int bt_bus_init(void);
+int bt_bus_deinit(void);
+int bt_bus_transmit(const uint8_t *data_out, uint32_t size);
+int bt_bus_receive(uint8_t *data_in, uint32_t size, uint32_t timeout_ms);
+int bt_bus_uart_reset(void);
+int bt_bus_uart_reconifig_baud(uint32_t baud);
+bool bt_bus_is_ready(void);
 
 /* Macro for checking of bus is initialised */
 #define IS_BUS_INITIALISED() \
@@ -56,21 +62,6 @@ do \
         mico_thread_msleep( 10 ); \
     } \
 } while ( 0 )
-
-/* TODO: bring in bt_bus code to remove BTE dependency on wiced bluetooth library */
-extern int bt_bus_init(void);
-
-extern int bt_bus_deinit(void);
-
-extern int bt_bus_transmit(const uint8_t *data_out, uint32_t size);
-
-extern int bt_bus_receive(uint8_t *data_in, uint32_t size, uint32_t timeout_ms);
-
-extern int bt_bus_uart_reset(void);
-
-extern int bt_bus_uart_reconifig_baud(uint32_t baud);
-
-extern bool bt_bus_is_ready(void);
 
 static uint32_t userial_baud_tbl[] = {
     300, /* USERIAL_BAUD_300          0 */

@@ -273,19 +273,10 @@ typedef struct {
 } platform_uart_t;
 
 typedef struct {
-    serial_t            serial_obj;
-    ring_buffer_t      *rx_buffer;
     mico_semaphore_t    rx_complete;
-    mico_mutex_t        tx_mutex;
-    volatile uint32_t   tx_size;
-    volatile uint32_t   rx_size;
+    mico_semaphore_t    tx_complete;
     volatile OSStatus   last_receive_result;
     volatile OSStatus   last_transmit_result;
-    volatile bool       initialized;
-    bool                is_receving;
-    bool                is_transmitting;
-    uint8_t             is_recv_over_flow;
-    uint8_t             FlowControl;
 } platform_uart_driver_t;
 
 #include "platform_mcu_peripheral.h" /* Include MCU-specific types */
@@ -547,8 +538,8 @@ OSStatus platform_mcu_powersave_disable(void);
  * @return @ref OSStatus
  */
 
-OSStatus platform_uart_init(platform_uart_driver_t *driver, const platform_uart_t *peripheral,
-                            const platform_uart_config_t *config, ring_buffer_t *optional_ring_buffer);
+//OSStatus platform_uart_init(platform_uart_driver_t *driver, const platform_uart_t *peripheral,
+//                            const platform_uart_config_t *config, ring_buffer_t *optional_ring_buffer);
 
 
 /**
@@ -556,7 +547,7 @@ OSStatus platform_uart_init(platform_uart_driver_t *driver, const platform_uart_
  *
  * @return @ref OSStatus
  */
-OSStatus platform_uart_deinit(platform_uart_driver_t *driver);
+//OSStatus platform_uart_deinit(platform_uart_driver_t *driver);
 
 
 /**
@@ -564,7 +555,7 @@ OSStatus platform_uart_deinit(platform_uart_driver_t *driver);
  *
  * @return @ref OSStatus
  */
-OSStatus platform_uart_transmit_bytes(platform_uart_driver_t *driver, const uint8_t *data_out, uint32_t size);
+//OSStatus platform_uart_transmit_bytes(platform_uart_driver_t *driver, const uint8_t *data_out, uint32_t size);
 
 
 /**
@@ -572,15 +563,15 @@ OSStatus platform_uart_transmit_bytes(platform_uart_driver_t *driver, const uint
  *
  * @return @ref OSStatus
  */
-OSStatus platform_uart_receive_bytes(platform_uart_driver_t *driver, uint8_t *data_in, uint32_t expected_data_size,
-                                     uint32_t timeout_ms);
+//OSStatus platform_uart_receive_bytes(platform_uart_driver_t *driver, uint8_t *data_in, uint32_t expected_data_size,
+//                                     uint32_t timeout_ms);
 
 /**
  * Get the received data length in ring buffer over the specified UART port
  *
  * @return
  */
-uint32_t platform_uart_get_length_in_buffer(platform_uart_driver_t *driver);
+//uint32_t platform_uart_get_length_in_buffer(platform_uart_driver_t *driver);
 
 // /**
 //  * Initialise the specified SPI interface

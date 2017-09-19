@@ -481,53 +481,53 @@ void MicoSystemStandBy( uint32_t secondsToWakeup )
 //   return (OSStatus) platform_spi_slave_generate_interrupt( &platform_spi_slave_drivers[spi], pulse_duration_ms );
 // }
 
-OSStatus MicoUartInitialize(mico_uart_t uart, const mico_uart_config_t *config, ring_buffer_t *optional_rx_buffer)
-{
-    if (uart >= MICO_UART_NONE)
-        return kUnsupportedErr;
-
-#ifndef MICO_DISABLE_STDIO
-    /* Interface is used by STDIO. Uncomment MICO_DISABLE_STDIO to overcome this */
-    if (uart == STDIO_UART) {
-        return kGeneralErr;
-    }
-#endif
-
-    return (OSStatus) platform_uart_init(&platform_uart_drivers[uart], &platform_uart_peripherals[uart], config,
-                                         optional_rx_buffer);
-}
-
-OSStatus MicoUartFinalize(mico_uart_t uart)
-{
-    if (uart >= MICO_UART_NONE)
-        return kUnsupportedErr;
-
-    return (OSStatus) platform_uart_deinit(&platform_uart_drivers[uart]);
-}
-
-OSStatus MicoUartSend(mico_uart_t uart, const void *data, uint32_t size)
-{
-    if (uart >= MICO_UART_NONE)
-        return kUnsupportedErr;
-
-    return (OSStatus) platform_uart_transmit_bytes(&platform_uart_drivers[uart], (const uint8_t *) data, size);
-}
-
-OSStatus MicoUartRecv(mico_uart_t uart, void *data, uint32_t size, uint32_t timeout)
-{
-    if (uart >= MICO_UART_NONE)
-        return kUnsupportedErr;
-
-    return (OSStatus) platform_uart_receive_bytes(&platform_uart_drivers[uart], (uint8_t *) data, size, timeout);
-}
-
-uint32_t MicoUartGetLengthInBuffer(mico_uart_t uart)
-{
-    if (uart >= MICO_UART_NONE)
-        return 0;
-
-    return (OSStatus) platform_uart_get_length_in_buffer(&platform_uart_drivers[uart]);
-}
+//OSStatus MicoUartInitialize(mico_uart_t uart, const mico_uart_config_t *config, ring_buffer_t *optional_rx_buffer)
+//{
+//    if (uart >= MICO_UART_NONE)
+//        return kUnsupportedErr;
+//
+//#ifndef MICO_DISABLE_STDIO
+//    /* Interface is used by STDIO. Uncomment MICO_DISABLE_STDIO to overcome this */
+//    if (uart == STDIO_UART) {
+//        return kGeneralErr;
+//    }
+//#endif
+//
+//    return (OSStatus) platform_uart_init(&platform_uart_drivers[uart], &platform_uart_peripherals[uart], config,
+//                                         optional_rx_buffer);
+//}
+//
+//OSStatus MicoUartFinalize(mico_uart_t uart)
+//{
+//    if (uart >= MICO_UART_NONE)
+//        return kUnsupportedErr;
+//
+//    return (OSStatus) platform_uart_deinit(&platform_uart_drivers[uart]);
+//}
+//
+//OSStatus MicoUartSend(mico_uart_t uart, const void *data, uint32_t size)
+//{
+//    if (uart >= MICO_UART_NONE)
+//        return kUnsupportedErr;
+//
+//    return (OSStatus) platform_uart_transmit_bytes(&platform_uart_drivers[uart], (const uint8_t *) data, size);
+//}
+//
+//OSStatus MicoUartRecv(mico_uart_t uart, void *data, uint32_t size, uint32_t timeout)
+//{
+//    if (uart >= MICO_UART_NONE)
+//        return kUnsupportedErr;
+//
+//    return (OSStatus) platform_uart_receive_bytes(&platform_uart_drivers[uart], (uint8_t *) data, size, timeout);
+//}
+//
+//uint32_t MicoUartGetLengthInBuffer(mico_uart_t uart)
+//{
+//    if (uart >= MICO_UART_NONE)
+//        return 0;
+//
+//    return (OSStatus) platform_uart_get_length_in_buffer(&platform_uart_drivers[uart]);
+//}
 
 // OSStatus MicoRandomNumberRead( void *inBuffer, int inByteCount )
 // {

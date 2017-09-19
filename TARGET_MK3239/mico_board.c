@@ -411,7 +411,7 @@ const platform_bluetooth_config_t bt_config =
 {
     .patchram_download_mode      = PATCHRAM_DOWNLOAD_MODE_MINIDRV_CMD,
     .patchram_download_baud_rate = 115200,
-    .featured_baud_rate          = 3000000
+    .featured_baud_rate          = 115200
 };
 
 
