@@ -88,7 +88,7 @@ mico_thread_t read_thread_id;
 #if (defined(BT_USE_TRACES) && (BT_USE_TRACES == TRUE))
 #define READ_THREAD_STACK_SIZE      0x1000
 #else
-#define READ_THREAD_STACK_SIZE      0x200  //0x1000 Change by william to save ram
+#define READ_THREAD_STACK_SIZE      0x500  //0x1000 Change by william to save ram
 #endif
 #define READ_THREAD_NAME            ((INT8 *) "READ_THREAD")
 #define READ_THREAD_PRI             4

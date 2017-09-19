@@ -24,8 +24,8 @@
 #define BTE_BTU_STACK_SIZE        0x1800 // 0x1800 used to DEBUG Trace
 #define BTE_HCISU_STACK_SIZE      0x1000 // 0x1000 used to DEBUG Trace
 #else
-#define BTE_BTU_STACK_SIZE        0xA00   // 0x1800 Changed by William to save ram   0x500
-#define BTE_HCISU_STACK_SIZE      0x300   // 0x1000 Changed by William to save ram   0x300
+#define BTE_BTU_STACK_SIZE        0xA00   // 0x1800 Changed by William to save ram   0xA00
+#define BTE_HCISU_STACK_SIZE      0x500   // 0x1000 Changed by William to save ram   0x500
 #endif
 #define BTE_CODEC_STACK_SIZE      0x1000
 
