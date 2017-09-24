@@ -84,8 +84,6 @@ static void gki_init_free_queue (UINT8 id, UINT16 size, UINT16 total, void *p_me
 
     hdr1->p_next = NULL;
     p_cb->freeq[id].p_last = hdr1;
-
-    return;
 }
 
 
@@ -326,8 +324,6 @@ void gki_buffer_init(void)
 
     p_cb->pool_access_mask = (UINT16)(0xFFFF << GKI_NUM_TOTAL_BUF_POOLS);
     p_cb->curr_total_no_of_pools = GKI_NUM_FIXED_BUF_POOLS;
-
-    return;
 }
 #endif
 
@@ -344,8 +340,6 @@ void GKI_init_q (BUFFER_Q *p_q)
 {
     p_q->p_first = p_q->p_last = NULL;
     p_q->count = 0;
-
-    return;
 }
 
 
@@ -582,8 +576,6 @@ void GKI_freebuf (void *p_buf)
     GKI_TRACE_4("GKI_freebuf(size: %d) 0x%x task:%d/%d", Q->size,
         ((UINT8 *)p_hdr + BUFFER_HDR_SIZE), task_id, GKI_get_taskid());
 #endif
-
-    return;
 }
 
 
@@ -697,12 +689,9 @@ void GKI_send_msg (UINT8 task_id, UINT8 mbox, void *msg)
     p_hdr->status = BUF_STATUS_QUEUED;
     p_hdr->task_id = task_id;
 
-
     GKI_enable();
 
     GKI_send_event(task_id, (UINT16)EVENT_MASK(mbox));
-
-    return;
 }
 
 /*******************************************************************************
@@ -796,8 +785,6 @@ void GKI_enqueue (BUFFER_Q *p_q, void *p_buf)
     p_hdr->status = BUF_STATUS_QUEUED;
 
     GKI_enable();
-
-    return;
 }
 
 
@@ -851,8 +838,6 @@ void GKI_enqueue_head (BUFFER_Q *p_q, void *p_buf)
     p_hdr->status = BUF_STATUS_QUEUED;
 
     GKI_enable();
-
-    return;
 }
 
 
@@ -880,7 +865,6 @@ void *GKI_dequeue (BUFFER_Q *p_q)
     }
 
     p_hdr = (BUFFER_HDR_T *)((UINT8 *)p_q->p_first - BUFFER_HDR_SIZE);
-
     /* Keep buffers such that GKI header is invisible
     */
     if (p_hdr->p_next)
@@ -895,9 +879,7 @@ void *GKI_dequeue (BUFFER_Q *p_q)
 
     p_hdr->p_next = NULL;
     p_hdr->status = BUF_STATUS_UNLINKED;
-
     GKI_enable();
-
     return ((UINT8 *)p_hdr + BUFFER_HDR_SIZE);
 }
 
@@ -1142,8 +1124,6 @@ static void gki_add_to_pool_list(UINT8 pool_id)
     }
 
     p_cb->pool_list[i] = pool_id;
-
-    return;
 }
 
 /*******************************************************************************
@@ -1171,8 +1151,6 @@ static void gki_remove_from_pool_list(UINT8 pool_id)
         p_cb->pool_list[i] = p_cb->pool_list[i+1];
         i++;
     }
-
-    return;
 }
 
 /*******************************************************************************
@@ -1281,8 +1259,6 @@ void GKI_change_buf_owner (void *p_buf, UINT8 task_id)
     BUFFER_HDR_T    *p_hdr = (BUFFER_HDR_T *) ((UINT8 *) p_buf - BUFFER_HDR_SIZE);
 
     p_hdr->task_id = task_id;
-
-    return;
 }
 
 #if (defined(GKI_SEND_MSG_FROM_ISR) &&  GKI_SEND_MSG_FROM_ISR == TRUE)
@@ -1455,8 +1431,6 @@ void GKI_delete_pool (UINT8 pool_id)
         GKI_exception(GKI_ERROR_DELETE_POOL_BAD_QID, "Deleting bad pool");
 
     GKI_enable();
-
-    return;
 }
 
 #endif /*  BTU_STACK_LITE_ENABLED == FALSE */

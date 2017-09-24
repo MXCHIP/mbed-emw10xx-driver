@@ -63,6 +63,9 @@ extern "C" {
 #define L2CAP_MTU_SIZE                  ((UINT16)(HCI_ACL_POOL_BUF_SIZE - BT_HDR_SIZE - 8))     /* ACL bufsize minus BT_HDR, and l2cap/hci packet headers */
 #define L2CAP_LE_COC_INCLUDED           TRUE
 
+#if (defined(MICO_BTE_CLASSICAL) && (MICO_BTE_CLASSICAL == 1))
+
+/* RFCOMM definitions */
 #define RFCOMM_INCLUDED                 TRUE
 #define RFCOMM_USE_EXTERNAL_SCN         TRUE
 #define RFCOMM_CMD_POOL_ID              GKI_POOL_ID_1
@@ -107,6 +110,56 @@ extern "C" {
 #define AVRC_SEC_MASK                   (p_btm_cfg_settings->security_requirement_mask)
 #define AVRC_CONTROL_MTU                (L2CAP_MTU_SIZE)
 #define AVRC_BROWSE_MTU                 (L2CAP_MTU_SIZE)
+
+#else 
+
+/* RFCOMM definitions */
+#define RFCOMM_INCLUDED                 FALSE
+#define RFCOMM_USE_EXTERNAL_SCN         FALSE
+#define RFCOMM_CMD_POOL_ID              GKI_POOL_ID_1
+#define RFCOMM_DATA_POOL_ID             GKI_POOL_ID_2
+#define MAX_RFC_PORTS                   (p_btm_cfg_settings->rfcomm_cfg.max_ports)
+#define MAX_BD_CONNECTIONS              (p_btm_cfg_settings->rfcomm_cfg.max_links)
+#define PORT_RX_CRITICAL_WM             ((UINT32)(L2CAP_MTU_SIZE-L2CAP_MIN_OFFSET-RFCOMM_DATA_OVERHEAD)*PORT_RX_BUF_CRITICAL_WM)
+#define PORT_RX_LOW_WM                  ((UINT32)(L2CAP_MTU_SIZE-L2CAP_MIN_OFFSET-RFCOMM_DATA_OVERHEAD)*PORT_RX_BUF_LOW_WM)
+#define PORT_RX_HIGH_WM                 ((UINT32)(L2CAP_MTU_SIZE-L2CAP_MIN_OFFSET-RFCOMM_DATA_OVERHEAD)*PORT_RX_BUF_HIGH_WM)
+#define PORT_RX_BUF_LOW_WM              2
+#define PORT_RX_BUF_HIGH_WM             3
+#define PORT_RX_BUF_CRITICAL_WM         5
+#define PORT_TX_HIGH_WM                 ((UINT32)(L2CAP_MTU_SIZE-L2CAP_MIN_OFFSET-RFCOMM_DATA_OVERHEAD)*PORT_TX_BUF_HIGH_WM)
+#define PORT_TX_CRITICAL_WM             ((UINT32)(L2CAP_MTU_SIZE-L2CAP_MIN_OFFSET-RFCOMM_DATA_OVERHEAD)*PORT_TX_BUF_CRITICAL_WM)
+#define PORT_TX_BUF_HIGH_WM             3
+#define PORT_TX_BUF_CRITICAL_WM         5
+#define PORT_CREDIT_RX_LOW              2
+#define PORT_CREDIT_RX_MAX              3
+
+/* HID definitions */
+#define HID_DEV_INCLUDED                FALSE
+#define HID_DEV_MAX_DESCRIPTOR_SIZE     200
+#define HID_DEV_SET_CONN_MODE           FALSE
+
+/* AVDT/A2DP/AVRC definitions */
+#define A2D_INCLUDED                    FALSE
+#define A2D_SBC_INCLUDED                FALSE
+#define A2D_M12_INCLUDED                FALSE
+#define A2D_M24_INCLUDED                FALSE
+#define AVDT_INCLUDED                   FALSE
+#define AVDT_REPORTING                  FALSE
+#define AVDT_MULTIPLEXING               FALSE
+#define AVDT_NUM_LINKS                  (p_btm_cfg_settings->avdt_cfg.max_links)
+#define AVDT_CMD_POOL_ID                GKI_POOL_ID_1
+#define AVDT_DATA_POOL_ID               GKI_POOL_ID_3
+#define AVDT_DATA_POOL_SIZE             GKI_BUF3_SIZE
+
+#define AVRC_INCLUDED                   FALSE
+#define AVCT_INCLUDED                   FALSE
+#define AVCT_NUM_LINKS                  (p_btm_cfg_settings->avrc_cfg.max_links)
+#define AVCT_NUM_CONN                   (avct_cb.num_conn)
+#define AVRC_SEC_MASK                   (p_btm_cfg_settings->security_requirement_mask)
+#define AVRC_CONTROL_MTU                (L2CAP_MTU_SIZE)
+#define AVRC_BROWSE_MTU                 (L2CAP_MTU_SIZE)
+
+#endif /* MICO_BTE_CLASSICAL */
 
 #define GATT_FIXED_DB                   TRUE
 #define GATTS_APPU_USE_GATT_TRACE       FALSE
@@ -158,8 +211,7 @@ extern "C" {
 #define GKI_DYNAMIC_POOL_CFG            TRUE
 #define GKI_DYNAMIC_MEMORY              FALSE
 #define GKI_USE_DYNAMIC_BUFFERS         TRUE
-
-
+#define GKI_TIMER_LIST_NOPREEMPT        TRUE
 
 #define HCIC_INCLUDED                   TRUE
 #define HCI_CMD_POOL_ID                 GKI_POOL_ID_1
@@ -171,7 +223,7 @@ extern "C" {
 
 #define HCISU_H4_INCLUDED               TRUE
 #define HCILP_INCLUDED                  TRUE
-#define HCILP_SLEEP_MODE                0
+#define HCILP_SLEEP_MODE                1
 #define H4IBSS_INCLUDED                 FALSE
 #define H4IBSS_DEBUG                    FALSE
 
@@ -192,7 +244,7 @@ extern "C" {
 #define BTM_MAX_LOC_BD_NAME_LEN         0
 #define BTM_MAX_PM_RECORDS              1
 #define BTM_MAX_VSE_CALLBACKS           1
-#define BTM_BLE_MAX_BG_CONN_DEV_NUM     2
+#define BTM_BLE_MAX_BG_CONN_DEV_NUM     10
 #define BTM_OOB_INCLUDED                FALSE
 #define BTM_BR_SC_INCLUDED              FALSE
 #define BTM_CROSS_TRANSP_KEY_DERIVATION FALSE
@@ -202,6 +254,8 @@ extern "C" {
 #define BTTRC_INCLUDED                  FALSE
 #define BTTRC_PARSER_INCLUDED           FALSE
 #define MAX_TRACE_RAM_SIZE              10
+
+#if (defined(MICO_BTE_CLASSICAL) && (MICO_BTE_CLASSICAL == 1))
 
 #define SDP_INCLUDED                    TRUE
 #define SDP_CLIENT_ENABLED              TRUE
@@ -215,11 +269,26 @@ extern "C" {
 #define SDP_MAX_PROTOCOL_PARAMS         2
 #define SDP_RAW_DATA_SERVER             FALSE
 
+#else 
+
+#define SDP_INCLUDED                    FALSE
+#define SDP_CLIENT_ENABLED              FALSE
+#define SDP_SERVER_ENABLED              FALSE
+#define SDP_POOL_ID                     GKI_POOL_ID_2
+#define SDP_MAX_CONNECTIONS             1
+#define SDP_MAX_RECORDS                 3
+#define SDP_MAX_REC_ATTR                8
+#define SDP_MAX_UUID_FILTERS            3
+#define SDP_MAX_ATTR_FILTERS            12
+#define SDP_MAX_PROTOCOL_PARAMS         2
+#define SDP_RAW_DATA_SERVER             FALSE
+
+#endif 
+
 #if (defined(BTU_DYNAMIC_CB_INCLUDED)  && (BTU_DYNAMIC_CB_INCLUDED == TRUE))
 #define MAX_L2CAP_CLIENTS               (btu_cb.l2c_cfg_max_clients)
 #define MAX_L2CAP_LINKS                 (btu_cb.l2c_cfg_max_links)
 #define MAX_L2CAP_CHANNELS              (btu_cb.l2c_cfg_max_channels)
-#define BTM_INIT_CLASS_OF_DEVICE        (p_btm_cfg_settings->device_class)
 
 /* Connection Oriented Channel configuration */
 #define MAX_L2CAP_BLE_CLIENTS           (p_btm_cfg_settings->l2cap_application.max_le_psm)

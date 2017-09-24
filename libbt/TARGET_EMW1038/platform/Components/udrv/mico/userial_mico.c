@@ -91,10 +91,7 @@ mico_thread_t read_thread_id;
 #define READ_THREAD_STACK_SIZE      0x500  //0x1000 Change by william to save ram
 #endif
 #define READ_THREAD_NAME            ((INT8 *) "READ_THREAD")
-#define READ_THREAD_PRI             4
-//#define READ_THREAD_PRI             8   /* test: lower than player task */
-// #define READ_LIMIT               (GKI_BUF3_SIZE-BT_HDR_SIZE)
-// #define HCISU_EVT                   EVENT_MASK(APPL_EVENT_0)
+#define READ_THREAD_PRI             5
 
 #define HCI_TYPE_COMMAND            1
 #define HCI_TYPE_ACL_DATA           2
@@ -253,17 +250,16 @@ void USERIAL_Open_ReadThread(void)
 
 void USERIAL_Close_ReadThread(void)
 {
-    // Close our read thread
+    /* Close our read thread */
     g_readThreadAlive = 0;
     mico_rtos_delete_thread(&read_thread_id);
 
-    // Flush the queue
+    /* Flush the queue */
     do {
         pbuf_USERIAL_Read = (BT_HDR *) GKI_dequeue(&Userial_in_q);
         if (pbuf_USERIAL_Read) {
             GKI_freebuf(pbuf_USERIAL_Read);
         }
-
     } while (pbuf_USERIAL_Read);
 }
 
@@ -279,8 +275,7 @@ void USERIAL_Close_ReadThread(void)
  **
  *******************************************************************************/
 
-UDRV_API
-void USERIAL_Open(tUSERIAL_PORT port, tUSERIAL_OPEN_CFG *p_cfg, tUSERIAL_CBACK *p_cback)
+UDRV_API void USERIAL_Open(tUSERIAL_PORT port, tUSERIAL_OPEN_CFG *p_cfg, tUSERIAL_CBACK *p_cback)
 {
     int result;
 
@@ -310,8 +305,7 @@ void USERIAL_Open(tUSERIAL_PORT port, tUSERIAL_OPEN_CFG *p_cfg, tUSERIAL_CBACK *
  **
  *******************************************************************************/
 
-UDRV_API
-UINT16 USERIAL_Read(tUSERIAL_PORT port, UINT8 *p_data, UINT16 len)
+UDRV_API UINT16 USERIAL_Read(tUSERIAL_PORT port, UINT8 *p_data, UINT16 len)
 {
     UINT16 total_len = 0;
     UINT16 copy_len = 0;
@@ -321,10 +315,11 @@ UINT16 USERIAL_Read(tUSERIAL_PORT port, UINT8 *p_data, UINT16 len)
         if (pbuf_USERIAL_Read != NULL) {
             current_packet = ((UINT8 *) (pbuf_USERIAL_Read + 1)) + (pbuf_USERIAL_Read->offset);
 
-            if ((pbuf_USERIAL_Read->len) <= (len - total_len))
+            if ((pbuf_USERIAL_Read->len) <= (len - total_len)) {
                 copy_len = pbuf_USERIAL_Read->len;
-            else
+            } else {
                 copy_len = (len - total_len);
+            }
 
             memcpy((p_data + total_len), current_packet, copy_len);
 
@@ -341,11 +336,8 @@ UINT16 USERIAL_Read(tUSERIAL_PORT port, UINT8 *p_data, UINT16 len)
 
         if (pbuf_USERIAL_Read == NULL) {
             pbuf_USERIAL_Read = (BT_HDR *) GKI_dequeue(&Userial_in_q);
-//            DRV_TRACE_DEBUG1("USERIAL_Read dequeue %08x", pbuf_USERIAL_Read);
         }
     } while ((pbuf_USERIAL_Read != NULL) && (total_len < len));
-
-//    DRV_TRACE_DEBUG1("USERIAL_Read %i bytes", total_len);
 
     return total_len;
 }
@@ -366,8 +358,7 @@ UINT16 USERIAL_Read(tUSERIAL_PORT port, UINT8 *p_data, UINT16 len)
  **                    NULL.
  **
  *******************************************************************************/
-UDRV_API
-void USERIAL_ReadBuf(tUSERIAL_PORT port, BT_HDR **p_buf)
+UDRV_API void USERIAL_ReadBuf(tUSERIAL_PORT port, BT_HDR **p_buf)
 {
 
 }
@@ -388,8 +379,7 @@ void USERIAL_ReadBuf(tUSERIAL_PORT port, BT_HDR **p_buf)
  **                    buffer.
  **
  *******************************************************************************/
-UDRV_API
-BOOLEAN USERIAL_WriteBuf(tUSERIAL_PORT port, BT_HDR *p_buf)
+UDRV_API BOOLEAN USERIAL_WriteBuf(tUSERIAL_PORT port, BT_HDR *p_buf)
 {
     return FALSE;
 }
@@ -406,18 +396,15 @@ BOOLEAN USERIAL_WriteBuf(tUSERIAL_PORT port, BT_HDR *p_buf)
  **                    may be less than len.
  **
  *******************************************************************************/
-UDRV_API
-UINT16 USERIAL_Write(tUSERIAL_PORT port, UINT8 *p_data, UINT16 len)
+UDRV_API UINT16 USERIAL_Write(tUSERIAL_PORT port, UINT8 *p_data, UINT16 len)
 {
     int result;
 
-//    DRV_TRACE_DEBUG1("USERIAL_Write len=%d", len);
     result = bt_bus_transmit(p_data, len);
     if (result != kNoErr) {
         DRV_TRACE_DEBUG0("USERIAL_Write failed");
         return 0;
     }
-//    DRV_TRACE_DEBUG0("USERIAL_Write success");
     return len;
 }
 
@@ -434,10 +421,8 @@ UINT16 USERIAL_Write(tUSERIAL_PORT port, UINT8 *p_data, UINT16 len)
  **
  *******************************************************************************/
 
-UDRV_API
-void USERIAL_Ioctl(tUSERIAL_PORT port, tUSERIAL_OP op, tUSERIAL_IOCTL_DATA *p_data)
+UDRV_API void USERIAL_Ioctl(tUSERIAL_PORT port, tUSERIAL_OP op, tUSERIAL_IOCTL_DATA *p_data)
 {
-
     switch (op) {
         case USERIAL_OP_FLUSH:
             break;
@@ -455,8 +440,6 @@ void USERIAL_Ioctl(tUSERIAL_PORT port, tUSERIAL_OP op, tUSERIAL_IOCTL_DATA *p_da
         default:
             break;
     }
-
-    return;
 }
 
 /*******************************************************************************
@@ -470,11 +453,9 @@ void USERIAL_Ioctl(tUSERIAL_PORT port, tUSERIAL_OP op, tUSERIAL_IOCTL_DATA *p_da
  ** Returns            Nothing
  **
  *******************************************************************************/
-UDRV_API
-void USERIAL_Close(tUSERIAL_PORT port)
+UDRV_API void USERIAL_Close(tUSERIAL_PORT port)
 {
     int result;
-    DRV_TRACE_DEBUG0("USERIAL_Close");
 
     USERIAL_Close_ReadThread();
 
@@ -482,8 +463,6 @@ void USERIAL_Close(tUSERIAL_PORT port)
     if (result != kNoErr) {
         DRV_TRACE_DEBUG0("USERIAL_Close failed");
     }
-
-    DRV_TRACE_DEBUG0("USERIAL_Close--");
 }
 
 /*******************************************************************************
@@ -516,9 +495,11 @@ int bt_hci_transport_driver_bus_read_handler(BT_HDR *packet)
     packet->layer_specific = 0;
     current_packet = (UINT8 *) (packet + 1);
 
-    // Read 1 byte:
-    //    packet_type
-    // Use a timeout here so we can shutdown the thread
+    /* 
+     * Read 1 byte:
+     *    packet_type
+     * Use a timeout here so we can shutdown the thread
+     */
     if (bt_bus_receive((uint8_t *) &packet_type, 1, MICO_NEVER_TIMEOUT) != kNoErr) {
         DRV_TRACE_ERROR0("bt_bus error reading pkt_type");
         return kGeneralErr;
@@ -530,8 +511,10 @@ int bt_hci_transport_driver_bus_read_handler(BT_HDR *packet)
         case HCI_LOOPBACK_MODE:
             *current_packet++ = packet_type;
 
-            // Read 1 byte:
-            //    content_length
+            /* 
+             * Read 1 byte:
+             *    content_length
+             */
             if (bt_bus_receive(current_packet, 1, MICO_NEVER_TIMEOUT) != kNoErr) {
                 return kGeneralErr;
             }
@@ -539,13 +522,13 @@ int bt_hci_transport_driver_bus_read_handler(BT_HDR *packet)
             packet->len = *current_packet++;
             DRV_TRACE_DEBUG1("HCI_LOOPBACK_MODE packet->len=0x%x", packet->len);
 
-            // Read payload
+            /* Read payload */
             if (bt_bus_receive(current_packet, packet->len, MICO_NEVER_TIMEOUT) != kNoErr) {
                 DRV_TRACE_DEBUG0("bt_bus_receive FAIL in bt_hci_transport_driver_bus_read_handler");
                 return kGeneralErr;
             }
 
-            // +2 for packet type + read length
+            /* +2 for packet type + read length */
             packet->len = (UINT16)(packet->len + 2);
 
             break;
@@ -553,9 +536,11 @@ int bt_hci_transport_driver_bus_read_handler(BT_HDR *packet)
         case HCI_EVENT_PACKET: {
             hci_event_header_t header;
 
-            // Read 2 bytes:
-            //    event_code
-            //    content_length
+            /* 
+             * Read 2 bytes:
+             *    event_code
+             *    content_length
+             */
             if (bt_bus_receive((uint8_t *) &header.event_code, sizeof(header) - sizeof(packet_type),
                                MICO_NEVER_TIMEOUT) != kNoErr) {
                 return kGeneralErr;
@@ -565,10 +550,10 @@ int bt_hci_transport_driver_bus_read_handler(BT_HDR *packet)
             *current_packet++ = packet_type;
             *current_packet++ = header.event_code;
             *current_packet++ = header.content_length;
-            // +3 to include sizeof: packet_type=1 event_code=1 content_length=1
+            /* +3 to include sizeof: packet_type=1 event_code=1 content_length=1 */
             packet->len = (UINT16)(header.content_length + 3);
 
-            // Read payload
+            /* Read payload */
             if (bt_bus_receive((uint8_t *) current_packet, (uint32_t) header.content_length, MICO_NEVER_TIMEOUT) !=
                 kNoErr) {
                 return kGeneralErr;
@@ -580,9 +565,11 @@ int bt_hci_transport_driver_bus_read_handler(BT_HDR *packet)
         case HCI_ACL_DATA_PACKET: {
             hci_acl_packet_header_t header;
 
-            // Read 4 bytes:
-            //    hci_handle (2 bytes)
-            //    content_length (2 bytes)
+            /*
+             * Read 4 bytes:
+             *    hci_handle (2 bytes)
+             *    content_length (2 bytes)
+             */
             if (bt_bus_receive((uint8_t *) &header.hci_handle, HCI_DATA_PREAMBLE_SIZE, MICO_NEVER_TIMEOUT) != kNoErr) {
                 DRV_TRACE_ERROR0("bt_bus error acl header");
                 return kGeneralErr;
@@ -593,29 +580,22 @@ int bt_hci_transport_driver_bus_read_handler(BT_HDR *packet)
             UINT16_TO_STREAM(current_packet, header.hci_handle);
             UINT16_TO_STREAM(current_packet, header.content_length);
 
-            // +5 to include sizeof: packet_type=1 hci_handle=2 content_length=2
+            /* +5 to include sizeof: packet_type=1 hci_handle=2 content_length=2 */
             packet->len = (UINT16)(header.content_length + 5);
 
 #ifdef L2CAP_REASSEMBLE
-
             /* Check for segmented packets. If this is a continuation packet, then   */
             /* current rcv buffer will be freed, and we will continue appending data */
             /* to the original rcv buffer.                                           */
-            if ((packet = l2cap_link_chk_pkt_start (packet)) == NULL)
-            {
+            if ((packet = l2cap_link_chk_pkt_start (packet)) == NULL) {
                 /* If a NULL is returned, then we have a problem. Ignore remaining data in this packet */
                 p_cb->rcv_len = msg_len;
-                if (msg_len == 0)
-                {
+                if (msg_len == 0) {
                     p_cb->rcv_state = HCISU_H4_MSGTYPE_ST;  /* Wait for next message */
-                }
-                else
-                {
+                } else {
                     HCI_TRACE_ERROR0("HCIS: Ignoring....");
-
                     p_cb->rcv_state = HCISU_H4_IGNORE_ST;   /* Ignore rest of the packet */
                 }
-
                 break;
             }
 #endif
@@ -624,12 +604,11 @@ int bt_hci_transport_driver_bus_read_handler(BT_HDR *packet)
                 DRV_TRACE_ERROR1("bt_bus error invalid acl len %i", header.content_length);
                 return kGeneralErr;
             }
-            // Read payload
+            /* Read payload */
             if (bt_bus_receive((uint8_t *) current_packet, (uint32_t) header.content_length, MICO_NEVER_TIMEOUT) !=
                 kNoErr) {
                 return kGeneralErr;
             }
-
             break;
         }
 
@@ -666,9 +645,7 @@ void userial_read_thread(mico_thread_arg_t arg)
                 GKI_freebuf(p_buf);
                 continue;
             }
-
 //            DRV_TRACE_DEBUG1("USERIAL_Read enqueue %08x", p_buf);
-
 #if 0
             p = (p_buf+1);
             if (p[0] == HCI_ACL_DATA_PACKET) {
@@ -682,12 +659,11 @@ void userial_read_thread(mico_thread_arg_t arg)
             }
 #endif
             GKI_enqueue(&Userial_in_q, p_buf);
-
-
             if (userial_cb.p_cback) {
                 (userial_cb.p_cback)(0, USERIAL_RX_READY_EVT, NULL);
             }
         } else {
+            printf("No queue for read data\r\n");
             GKI_delay(2000);
         }
     }

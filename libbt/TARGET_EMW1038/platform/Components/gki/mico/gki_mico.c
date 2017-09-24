@@ -16,9 +16,17 @@
  *  limitations under the License.
  *
  ******************************************************************************/
-#include "mico_rtos.h"
+
+#include "mico.h"
+
 #include "gki_target.h"
 #include "gki_int.h"
+
+#if 0
+#define gki_log(fmt, ...) custom_log("GKI", fmt, ##__VA_ARGS__)
+#else
+#define gki_log(fmt, ...)
+#endif
 
 /* Define the structure that holds the GKI variables */
 #if GKI_DYNAMIC_MEMORY == FALSE
@@ -26,11 +34,15 @@ tGKI_CB gki_cb;
 #endif
 
 /* Wiced base priority for GKI_TASK_ID 0  */
-#define GKI_WICED_BASE_PRIORITY     4u
+#define GKI_MICO_BASE_PRIORITY     4u
 
-mico_timer_t update_tick_timer;
-UINT8        disable_task_id = 0xFF;
-BOOLEAN      disble_task = FALSE;
+static UINT8                disable_task_id = 0xFF;
+
+/* Worker thread to manage timed event for MiCOKit led control */
+// static mico_worker_thread_t gki_update_timer_worker_thread;
+// static mico_timed_event_t   gki_update_timer_event;
+
+static mico_timer_t         gki_update_timer;
 
 /*******************************************************************************
  **
@@ -94,23 +106,18 @@ UINT8 GKI_create_task(TASKPTR task_entry, UINT8 task_id, INT8 *taskname, UINT16 
     UINT8 priority;
     OSStatus ret = 0;
 
-    GKI_TRACE_5 ("GKI_create_task func=0x%x  id=%d  name=%s  stack=0x%x  stackSize=%d",
-                 task_entry, task_id, taskname, stack, stacksize);
+    UNUSED_PARAMETER(stack);
+
+    gki_log ("GKI_create_task func=0x%lx  id=%d  name=%s  stack=0x%lx  stackSize=%d",
+             (UINT32)task_entry, task_id, taskname, (UINT32)stack, stacksize);
 
     if (task_id >= GKI_MAX_TASKS) {
-        GKI_TRACE_0("Error! task ID > max task allowed");
+        gki_log("Error! task ID > max task allowed");
         return (GKI_FAILURE);
     }
 
     /* Adjust priority based on task_id */
-#if 0
-    if (task_id == 1) {
-        priority = GKI_WICED_BASE_PRIORITY;
-    } else {
-        priority = task_id + GKI_WICED_BASE_PRIORITY;
-    }
-#endif
-    priority = task_id + GKI_WICED_BASE_PRIORITY;
+    priority = (UINT8)(task_id + GKI_MICO_BASE_PRIORITY);
 
     gki_cb.com.OSRdyTbl[task_id]  = TASK_READY;
     gki_cb.com.OSTName[task_id]   = taskname;
@@ -119,7 +126,7 @@ UINT8 GKI_create_task(TASKPTR task_entry, UINT8 task_id, INT8 *taskname, UINT16 
 
     ret = mico_rtos_init_mutex(&gki_cb.os.thread_evt_mutex[task_id]);
     if (ret != kNoErr) {
-        GKI_TRACE_2("GKI_create_task thread_evt_mutex failed(%d), %s!", ret, taskname);
+        gki_log("GKI_create_task thread_evt_mutex failed(%d), %s!", ret, taskname);
         return GKI_FAILURE;
     }
 
@@ -127,14 +134,14 @@ UINT8 GKI_create_task(TASKPTR task_entry, UINT8 task_id, INT8 *taskname, UINT16 
                                NULL, THREAD_EVT_QUEUE_MSG_SIZE,
                                THREAD_EVT_QUEUE_NUM_MSG);
     if (ret != kNoErr) {
-        GKI_TRACE_2("GKI_create_task thread_evt_queue failed(%d), %s!", ret, taskname);
+        gki_log("GKI_create_task thread_evt_queue failed(%d), %s!", ret, taskname);
         return GKI_FAILURE;
     }
 
     ret = mico_rtos_create_thread(&gki_cb.os.thread_id[task_id], priority, (const char *) taskname,
                                   (mico_thread_function_t) task_entry, stacksize, /*NULL*/0);
     if (ret != kNoErr) {
-        GKI_TRACE_2("GKI_create_task thread_id failed(%d), %s!", ret, taskname);
+        gki_log("GKI_create_task thread_id failed(%d), %s!", ret, taskname);
         return GKI_FAILURE;
     }
 
@@ -157,15 +164,21 @@ void GKI_shutdown(void)
 {
     UINT8 task_id;
 
-    mico_rtos_stop_timer(&update_tick_timer);
+//    mico_rtos_deregister_timed_event(&gki_update_timer_event);
+//    mico_rtos_delete_worker_thread(&gki_update_timer_worker_thread);
+    mico_rtos_stop_timer(&gki_update_timer);
+    mico_rtos_deinit_timer(&gki_update_timer);
 
-#if 1
     for (task_id = GKI_MAX_TASKS; task_id > 0; task_id--) {
         if (gki_cb.com.OSRdyTbl[task_id - 1] != TASK_DEAD) {
+
             /* paranoi settings, make sure that we do not execute any mailbox events */
-            gki_cb.com.OSWaitEvt[task_id - 1] &= ~(TASK_MBOX_0_EVT_MASK | TASK_MBOX_1_EVT_MASK | TASK_MBOX_2_EVT_MASK |
-                                                   TASK_MBOX_3_EVT_MASK);
-            GKI_send_event(task_id - 1, EVENT_MASK(GKI_SHUTDOWN_EVT));
+            gki_cb.com.OSWaitEvt[task_id - 1] &= ~(TASK_MBOX_0_EVT_MASK
+                                                   | TASK_MBOX_1_EVT_MASK
+                                                   | TASK_MBOX_2_EVT_MASK
+                                                   | TASK_MBOX_3_EVT_MASK);
+
+            GKI_send_event(task_id - (UINT8)1, EVENT_MASK(GKI_SHUTDOWN_EVT));
         }
     }
 
@@ -173,30 +186,9 @@ void GKI_shutdown(void)
 
     for (task_id = GKI_MAX_TASKS; task_id > 0; task_id--) {
         if (gki_cb.com.OSRdyTbl[task_id - 1] != TASK_DEAD) {
-            GKI_exit_task(task_id - 1);
+            GKI_exit_task(task_id - (UINT8)1);
         }
     }
-#else
-    // This is original shutdown code, but it did not work
-    // so we replaced with a double loop (above)
-
-    /* release threads and set as TASK_DEAD. going from low to high priority fixes
-     * GKI_exception problem due to btu->hci sleep request events  */
-    for ( task_id = GKI_MAX_TASKS; task_id > 0; task_id-- )
-    {
-        if ( gki_cb.com.OSRdyTbl[task_id - 1] != TASK_DEAD )
-        {
-            gki_cb.com.OSRdyTbl[task_id - 1] = TASK_DEAD;
-
-            /* paranoi settings, make sure that we do not execute any mailbox events */
-            gki_cb.com.OSWaitEvt[task_id - 1] &= ~( TASK_MBOX_0_EVT_MASK | TASK_MBOX_1_EVT_MASK | TASK_MBOX_2_EVT_MASK | TASK_MBOX_3_EVT_MASK );
-
-            GKI_send_event( task_id - 1, EVENT_MASK(GKI_SHUTDOWN_EVT) );
-
-            GKI_exit_task( task_id - 1 );
-        }
-    }
-#endif
 
     /* Destroy mutex and condition variable objects */
     mico_rtos_deinit_mutex(&gki_cb.os.GKI_mutex);
@@ -213,9 +205,18 @@ void GKI_shutdown(void)
  ** Returns          void
  **
  *********************************************************************************/
-void gki_update_timer_cback(void *arg)
+//OSStatus gki_update_timer_cback(void *arg)
+//{
+//    (void)arg;
+//
+//    GKI_timer_update(100);
+//
+//    return kNoErr;
+//}
+
+void gki_update_timer_cback(void *context)
 {
-    (void)arg;
+    (void)context;
     GKI_timer_update(100);
 }
 
@@ -237,8 +238,24 @@ void gki_update_timer_cback(void *arg)
 void GKI_run(void *p_task_id)
 {
     (void)p_task_id;
-    mico_rtos_init_timer(&update_tick_timer, 100, gki_update_timer_cback, NULL);
-    mico_rtos_start_timer(&update_tick_timer);
+
+    mico_rtos_init_timer(&gki_update_timer, 100, gki_update_timer_cback, NULL);
+    mico_rtos_start_timer(&gki_update_timer);
+
+//    if (kNoErr != mico_rtos_create_worker_thread(&gki_update_timer_worker_thread, 4, 1024, 1)) {
+//        gki_log("GKI_run: Create GKI Timer Worker thread failed\r\n");
+//        return;
+//    }
+//
+//    if (kNoErr != mico_rtos_register_timed_event(&gki_update_timer_event,
+//                                                 &gki_update_timer_worker_thread,
+//                                                  gki_update_timer_cback,
+//                                                  100,
+//                                                  NULL)) {
+//
+//        mico_rtos_delete_worker_thread(&gki_update_timer_worker_thread);
+//        gki_log("GKI_run: Register Time Event failed\r\n");
+//    }
 }
 
 /*******************************************************************************
@@ -284,80 +301,72 @@ void GKI_stop(void)
  *******************************************************************************/
 UINT16 GKI_wait(UINT16 flag, UINT32 timeout)
 {
-    UINT8 rtask;
-    UINT8 check;
-    UINT16 evt;
-    UINT32 queueData = 0;
+    OSStatus    err;
+    UINT8       rtask;
+    bool        check;
+    UINT16      evt;
+    UINT32      queueData = 0;
 
     rtask = GKI_get_taskid();
     if (rtask >= GKI_MAX_TASKS) {
         return 0;
     }
 
-    // Events the task is waiting for
-    gki_cb.com.OSWaitForEvt[rtask] = flag;
-
-    // Always lock around OSWaitEvt
-    // Check the events that have to be processes by this task
+    /* Always lock around OSWaitEvt
+     * Check the events that have to be processes by this task
+     */
     mico_rtos_lock_mutex(&gki_cb.os.thread_evt_mutex[rtask]);
+    gki_cb.com.OSWaitForEvt[rtask] = flag;
     check = !(gki_cb.com.OSWaitEvt[rtask] & flag);
     mico_rtos_unlock_mutex(&gki_cb.os.thread_evt_mutex[rtask]);
 
     if (check) {
-        // The event has not yet occurred
+        /* The event has not yet occurred */
         timeout = (timeout ? timeout : MICO_WAIT_FOREVER);
-        mico_rtos_pop_from_queue(&gki_cb.os.thread_evt_queue[rtask], (void *) &queueData, timeout);
 
+        err = mico_rtos_pop_from_queue(&gki_cb.os.thread_evt_queue[rtask], (void *) &queueData, timeout);
+        if (kNoErr != err) {
+            gki_log("%s: pop queue failed: %d", __FUNCTION__, err);
+            return 0;
+        }
         mico_rtos_lock_mutex(&gki_cb.os.thread_evt_mutex[rtask]);
         if (gki_cb.com.OSRdyTbl[rtask] == TASK_DEAD) {
             gki_cb.com.OSWaitEvt[rtask] = 0;
             mico_rtos_unlock_mutex(&gki_cb.os.thread_evt_mutex[rtask]);
-            BT_TRACE_1(TRACE_LAYER_HCI, TRACE_TYPE_DEBUG, "GKI TASK_DEAD received. exit thread %d...", rtask);
+            gki_log("GKI TASK_DEAD received. exit thread %d...", rtask);
             GKI_exit_task(rtask);
             return (EVENT_MASK(GKI_SHUTDOWN_EVT));
         }
     } else {
-        // The event has already occurred
-        mico_rtos_pop_from_queue(&gki_cb.os.thread_evt_queue[rtask], (void *) &queueData, 0);
+        /* The event has already occurred */
+        err = mico_rtos_pop_from_queue(&gki_cb.os.thread_evt_queue[rtask], (void *) &queueData, 0);
+        if (err != kNoErr) {
+            gki_log("%s: pop queue failed: %d", __FUNCTION__, err);
+            return 0;
+        }
         mico_rtos_lock_mutex(&gki_cb.os.thread_evt_mutex[rtask]);
     }
 
-    // Clear the wait for event mask
+    /* Clear the wait for event mask */
     gki_cb.com.OSWaitForEvt[rtask] = 0;
 
-    // Return only those bits which user wants...
+    /* Return only those bits which user wants... */
     evt = gki_cb.com.OSWaitEvt[rtask] & flag;
 
-    // Clear only those bits which user wants...
+    /* Clear only those bits which user wants... */
     gki_cb.com.OSWaitEvt[rtask] &= ~flag;
 
-    // Clear the flag the user wants and push the remaining flags back
+    /* Clear the flag the user wants and push the remaining flags back */
     queueData &= ~flag;
     queueData = queueData & 0x0000FFFF;
-    if (queueData)
-        mico_rtos_push_to_queue(&gki_cb.os.thread_evt_queue[rtask], (void *) &queueData, MICO_NEVER_TIMEOUT);
+    if (queueData) {
+        err = mico_rtos_push_to_queue(&gki_cb.os.thread_evt_queue[rtask], (void *) &queueData, MICO_NEVER_TIMEOUT);
+        if (err != kNoErr) {
+            gki_log("%s: push to queue failed: %d", __FUNCTION__, err);
+        }
+    }
 
-    /*
-     // Use this assertion to debug lost events
-     BT_TRACE_2(TRACE_LAYER_HCI,
-     TRACE_TYPE_DEBUG,
-     "assert gki_cb.com.OSWaitEvt[rtask] == queueData; 0x%x == 0x%x",
-     gki_cb.com.OSWaitEvt[rtask],
-     queueData);
-     */
-#if 0
-    BT_TRACE_6(
-            TRACE_LAYER_HCI,
-            TRACE_TYPE_DEBUG,
-            "GKI_wait taskid=0x%x check=0x%x OSWaitEvt=0x%x flag=0x%x queueData=0x%x evt=0x%x",
-            rtask,
-            check,
-            gki_cb.com.OSWaitEvt[rtask],
-            flag,
-            queueData & 0x0000FFFF,
-            evt);
-#endif
-    // unlock thread_evt_mutex as mico_cond_wait() does auto lock mutex when cond is met
+    /* unlock thread_evt_mutex as mico_cond_wait() does auto lock mutex when cond is met */
     mico_rtos_unlock_mutex(&gki_cb.os.thread_evt_mutex[rtask]);
 
     return (evt);
@@ -377,21 +386,15 @@ UINT16 GKI_wait(UINT16 flag, UINT32 timeout)
  *******************************************************************************/
 void GKI_delay(UINT32 timeout)
 {
-    INT8 rtask = (INT8) GKI_get_taskid();
-    DRV_TRACE_DEBUG0("GKI_delay++");
-    mico_rtos_delay_milliseconds(timeout);
-    DRV_TRACE_DEBUG0("GKI_delay finished");
+    UINT8 rtask = GKI_get_taskid();
 
-    // Check for a GKI task
-    if (rtask == -1 || rtask >= GKI_MAX_TASKS) {
-//        DRV_TRACE_DEBUG1("Someone is using GKI_delay from outside a GKI task rtask=0x%x", rtask);
-    } else if (rtask && gki_cb.com.OSRdyTbl[rtask] == TASK_DEAD) {
-        DRV_TRACE_DEBUG0("GKI_delay call GKI_exit_task");
+    mico_rtos_delay_milliseconds(timeout);
+
+    /* Check for a GKI task */
+    if (rtask < GKI_MAX_TASKS && gki_cb.com.OSRdyTbl[rtask] == TASK_DEAD) {
+        gki_log("GKI_delay call GKI_exit_task");
         GKI_exit_task(rtask);
     }
-
-    DRV_TRACE_DEBUG0("GKI_delay--");
-    return;
 }
 
 /*******************************************************************************
@@ -412,37 +415,49 @@ void GKI_delay(UINT32 timeout)
 UINT8 GKI_send_event(UINT8 task_id, UINT16 event)
 {
     OSStatus ret;
-    bool empty;
     UINT32 queueData = 0;
 
     /* use efficient coding to avoid pipeline stalls */
     if (task_id < GKI_MAX_TASKS) {
+        /* protect OSWaitEvt[task_id] from manipulation in GKI_wait() */
+        mico_rtos_lock_mutex(&gki_cb.os.thread_evt_mutex[task_id]);
+
         if (gki_cb.com.OSRdyTbl[task_id] == TASK_DEAD) {
-            GKI_TRACE_ERROR_1("GKI_send_event task %i inactive", task_id);
+            mico_rtos_unlock_mutex(&gki_cb.os.thread_evt_mutex[task_id]);
+            gki_log("GKI_send_event task %i inactive", task_id);
             return (GKI_FAILURE);
         }
 
-        /* protect OSWaitEvt[task_id] from manipulation in GKI_wait() */
-        mico_rtos_lock_mutex(&gki_cb.os.thread_evt_mutex[task_id]);
         /* Set the event bit */
         gki_cb.com.OSWaitEvt[task_id] |= event;
 
-        empty = mico_rtos_is_queue_empty(&gki_cb.os.thread_evt_queue[task_id]);
-        if (empty == true) {
+        if (mico_rtos_is_queue_empty(&gki_cb.os.thread_evt_queue[task_id])) {
             ret = mico_rtos_push_to_queue(&gki_cb.os.thread_evt_queue[task_id], (void *) &event, MICO_NEVER_TIMEOUT);
         } else {
-            if ((ret = mico_rtos_pop_from_queue(&gki_cb.os.thread_evt_queue[task_id], (void *) &queueData, 0)) !=
-                kNoErr) {
+            ret = mico_rtos_pop_from_queue(&gki_cb.os.thread_evt_queue[task_id], (void *) &queueData, 0);
+            if (ret != kNoErr) {
+                mico_rtos_unlock_mutex(&gki_cb.os.thread_evt_mutex[task_id]);
+                gki_log("mico_rtos_pop_from_queue failed task_id=0x%x ret=%d queueData=0x%x",
+                        task_id,
+                        ret,
+                        event);
                 return (GKI_FAILURE);
             }
+
             gki_cb.com.OSWaitEvt[task_id] |= (queueData & 0x0000FFFF);
-            ret = mico_rtos_push_to_queue(&gki_cb.os.thread_evt_queue[task_id], (void *) &gki_cb.com.OSWaitEvt[task_id],
+            ret = mico_rtos_push_to_queue(&gki_cb.os.thread_evt_queue[task_id],
+                                          (void *) &gki_cb.com.OSWaitEvt[task_id],
                                           MICO_NEVER_TIMEOUT);
         }
-
-//        BT_TRACE_3( TRACE_LAYER_HCI, TRACE_TYPE_DEBUG, "GKI_send_event mico_rtos_push_to_queue task_id=0x%x ret=0x%x queueData=0x%x", task_id, ret, event );
-
         mico_rtos_unlock_mutex(&gki_cb.os.thread_evt_mutex[task_id]);
+
+        if (ret != kNoErr) {
+            gki_log("mico_rtos_push_to_queue failed task_id=0x%x ret=%d queueData=0x%x",
+                    task_id,
+                    ret,
+                    event);
+        }
+
         return (GKI_SUCCESS);
     }
     return (GKI_FAILURE);
@@ -469,34 +484,30 @@ UINT8 GKI_send_event(UINT8 task_id, UINT16 event)
  *******************************************************************************/
 UINT8 GKI_isend_event(UINT8 task_id, UINT16 event)
 {
-    bool empty;
+    OSStatus ret;
     UINT32 queueData = 0;
 
     /* use efficient coding to avoid pipeline stalls */
     if (task_id < GKI_MAX_TASKS) {
-        /* protect OSWaitEvt[task_id] from manipulation in GKI_wait() */
-        //mico_rtos_lock_mutex( &gki_cb.os.thread_evt_mutex[task_id] );
 
         /* Set the event bit */
         gki_cb.com.OSWaitEvt[task_id] |= event;
 
-        empty = mico_rtos_is_queue_empty(&gki_cb.os.thread_evt_queue[task_id]);
-        if (empty == true) {
-            mico_rtos_push_to_queue(&gki_cb.os.thread_evt_queue[task_id], (void *) &event, MICO_NEVER_TIMEOUT);
+        if (mico_rtos_is_queue_empty(&gki_cb.os.thread_evt_queue[task_id])) {
+            ret = mico_rtos_push_to_queue(&gki_cb.os.thread_evt_queue[task_id], (void *) &event, MICO_NEVER_TIMEOUT);
         } else {
             if (mico_rtos_pop_from_queue(&gki_cb.os.thread_evt_queue[task_id], (void *) &queueData, 0) != kNoErr) {
-                //mico_rtos_unlock_mutex( &gki_cb.os.thread_evt_mutex[task_id] );
                 return (GKI_FAILURE);
             }
 
             gki_cb.com.OSWaitEvt[task_id] |= (queueData & 0x0000FFFF);
-            mico_rtos_push_to_queue(&gki_cb.os.thread_evt_queue[task_id], (void *) &gki_cb.com.OSWaitEvt[task_id],
-                                    MICO_NEVER_TIMEOUT);
+            ret = mico_rtos_push_to_queue(&gki_cb.os.thread_evt_queue[task_id],
+                                          (void *) &gki_cb.com.OSWaitEvt[task_id],
+                                          MICO_NEVER_TIMEOUT);
         }
 
-//        BT_TRACE_3( TRACE_LAYER_HCI, TRACE_TYPE_DEBUG, "GKI_send_event mico_rtos_push_to_queue task_id=0x%x ret=0x%x queueData=0x%x", task_id, ret, event );
-
-        //mico_rtos_unlock_mutex( &gki_cb.os.thread_evt_mutex[task_id] );
+        gki_log("GKI_send_event task_id=0x%x ret=0x%x queueData=0x%x",
+                task_id, ret, event);
 
         return (GKI_SUCCESS);
     }
@@ -520,16 +531,14 @@ UINT8 GKI_isend_event(UINT8 task_id, UINT16 event)
  *******************************************************************************/
 UINT8 GKI_get_taskid(void)
 {
-    int i;
-    bool is_current;
+    UINT8 i;
 
     for (i = 0; i < GKI_MAX_TASKS; i++) {
-        is_current = mico_rtos_is_current_thread(&gki_cb.os.thread_id[i]);
-        if (is_current == true) {
-            return (i);
+        if (mico_rtos_is_current_thread(&gki_cb.os.thread_id[i])) {
+            return i;
         }
     }
-    return (-1);
+    return (UINT8)(-1);
 }
 
 /*******************************************************************************
@@ -573,16 +582,10 @@ INT8 *GKI_map_taskname(UINT8 task_id)
  *******************************************************************************/
 void GKI_enable(void)
 {
-    //mico_result_t ret = WICED_PENDING;
-
-    mico_rtos_unlock_mutex(&gki_cb.os.GKI_mutex);
-    //mico_rtos_interrupt_control(1);
-
-    //if (ret != WICED_SUCCESS)
-    //{
-    //    LogMsg_0(0, "GKI_enable failed");
-    //}
-    return;
+    OSStatus ret = mico_rtos_unlock_mutex(&gki_cb.os.GKI_mutex);
+    if (ret != kNoErr) {
+        gki_log("GKI_enable failed");
+    }
 }
 
 /*******************************************************************************
@@ -597,19 +600,16 @@ void GKI_enable(void)
 void GKI_disable(void)
 {
     OSStatus ret = kGeneralErr;
-    UINT8 task_id;
+    UINT8    task_id;
 
-    //mico_rtos_interrupt_control(0);
     ret = mico_rtos_lock_mutex(&gki_cb.os.GKI_mutex);
-
     if (ret != kNoErr) {
         task_id = GKI_get_taskid();
         if (disable_task_id != task_id) {
             disable_task_id = task_id;
-            GKI_TRACE_ERROR_1(0, "GKI_disable failed");
+            gki_log("GKI_disable failed");
         }
     }
-    return;
 }
 
 /*******************************************************************************
@@ -627,19 +627,16 @@ void GKI_disable(void)
  *******************************************************************************/
 void GKI_exception(UINT16 code, char *msg)
 {
-    GKI_TRACE_ERROR_0("GKI_exception(): Task State Table");
+    gki_log("GKI_exception(): Task State Table");
 
-    /*
-     for(task_id = 0; task_id < GKI_MAX_TASKS; task_id++)
-     {
-     GKI_TRACE_ERROR_3( "TASK ID [%d] task name [%s] state [%d]",
-     task_id,
-     gki_cb.com.OSTName[task_id],
-     gki_cb.com.OSRdyTbl[task_id]);
-     }
-     */
+    for (UINT8 task_id = 0; task_id < GKI_MAX_TASKS; task_id++) {
+        gki_log("TASK ID [%d] task name [%s] state [%d]",
+                task_id,
+                gki_cb.com.OSTName[task_id],
+                gki_cb.com.OSRdyTbl[task_id]);
+    }
 
-    GKI_TRACE_ERROR_2("GKI_exception %d %s", code, msg);
+    gki_log("GKI_exception %d %s", code, msg);
 #if 0
     GKI_TRACE_ERROR_0( "********************************************************************");
     GKI_TRACE_ERROR_2( "* GKI_exception(): %d %s", code, msg);
@@ -663,7 +660,6 @@ void GKI_exception(UINT16 code, char *msg)
 
     GKI_TRACE_ERROR_2("GKI_exception %d %s done", code, msg);
 #endif
-    return;
 }
 
 /*******************************************************************************
@@ -737,8 +733,6 @@ INT8 *GKI_get_time_stamp(INT8 *tbuf)
 void GKI_register_mempool(void *p_mem)
 {
     gki_cb.com.p_user_mempool = p_mem;
-
-    return;
 }
 
 /*******************************************************************************
@@ -759,8 +753,6 @@ void GKI_register_mempool(void *p_mem)
 void *GKI_os_malloc(UINT32 size)
 {
     return (malloc(size));
-//    GKI_exception(0, "GKI_os_malloc not supported");
-//    return (NULL);
 }
 
 /*******************************************************************************
@@ -780,11 +772,9 @@ void *GKI_os_malloc(UINT32 size)
  *******************************************************************************/
 void GKI_os_free(void *p_mem)
 {
-    if (p_mem != NULL)
+    if (p_mem != NULL) {
         free(p_mem);
-//    GKI_exception(0, "GKI_os_free not supported");
-
-    return;
+    }
 }
 
 /*******************************************************************************
@@ -804,7 +794,7 @@ void GKI_os_free(void *p_mem)
  *******************************************************************************/
 UINT8 GKI_suspend_task(UINT8 task_id)
 {
-    return (GKI_SUCCESS);
+    return (GKI_FAILURE);
 }
 
 /*******************************************************************************
@@ -824,7 +814,7 @@ UINT8 GKI_suspend_task(UINT8 task_id)
  *******************************************************************************/
 UINT8 GKI_resume_task(UINT8 task_id)
 {
-    return (GKI_SUCCESS);
+    return (GKI_FAILURE);
 }
 
 /*******************************************************************************
@@ -846,14 +836,11 @@ void GKI_exit_task(UINT8 task_id)
 {
     GKI_disable();
     gki_cb.com.OSRdyTbl[task_id] = TASK_DEAD;
-
     /* Destroy mutex and condition variable objects */
     mico_rtos_deinit_mutex(&gki_cb.os.thread_evt_mutex[task_id]);
     mico_rtos_deinit_queue(&gki_cb.os.thread_evt_queue[task_id]);
     mico_rtos_delete_thread(&gki_cb.os.thread_id[task_id]);
-
     GKI_enable();
-    return;
 }
 
 /*******************************************************************************
@@ -873,7 +860,6 @@ void GKI_exit_task(UINT8 task_id)
 void GKI_sched_lock(void)
 {
     GKI_disable();
-    return;
 }
 
 /*******************************************************************************
@@ -931,8 +917,9 @@ void GKI_shiftdown(UINT8 *p_mem, UINT32 len, UINT32 shift_amount)
     register UINT8 *pd = ps + shift_amount;
     register UINT32 xx;
 
-    for (xx = 0; xx < len; xx++)
+    for (xx = 0; xx < len; xx++) {
         *pd-- = *ps--;
+    }
 }
 
 /*******************************************************************************
@@ -948,8 +935,9 @@ void GKI_shiftup(UINT8 *p_dest, UINT8 *p_src, UINT32 len)
     register UINT8 *pd = p_dest;
     register UINT32 xx;
 
-    for (xx = 0; xx < len; xx++)
+    for (xx = 0; xx < len; xx++) {
         *pd++ = *ps++;
+    }
 }
 
 /*******************************************************************************
